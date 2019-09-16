@@ -14,7 +14,7 @@ install:
 - cd vcpkg
 - ./bootstrap-vcpkg.sh
 - sudo ./vcpkg integrate install
-- ./vcpkg install beast:x64-linux-static openssl:x64-linux-static
+- ./vcpkg install beast:x64-linux openssl:x64-linux
 
 script:
 - cd ~/Hello-Boost-Beast
