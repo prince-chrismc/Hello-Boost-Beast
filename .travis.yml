@@ -20,10 +20,10 @@ install:
     cd vcpkg && \
     ./bootstrap-vcpkg.sh && \
     sudo ./vcpkg integrate install && \
-    git apply -v --ignore-whitespace "${WORK_DIR}"/vcpkg.patch;
-  else
+    git apply -v --ignore-whitespace "${WORK_DIR}"/vcpkg.patch; \
+  else \
     cd vcpkg && \
-    git pull;
+    git pull; \
   fi
 - ./vcpkg install beast:x64-linux openssl:x64-linux
 
