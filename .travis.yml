@@ -16,7 +16,7 @@ before_install:
 
 install:
 - cd ~/
-- git clone https://github.com/Microsoft/vcpkg.git 
+- if [ ! -d "~/vcpkg" ]; then git clone https://github.com/Microsoft/vcpkg.git fi
 - cd vcpkg
 - ./bootstrap-vcpkg.sh
 - sudo ./vcpkg integrate install
