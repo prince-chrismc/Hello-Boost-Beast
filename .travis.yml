@@ -6,6 +6,7 @@ matrix:
       dist: bionic
 
 before_install:
+- pwd
 - eval "${MATRIX_EVAL}"
 
 install:
