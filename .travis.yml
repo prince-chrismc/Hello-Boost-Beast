@@ -10,21 +10,19 @@ matrix:
       dist: bionic
 
 before_install:
-- pwd
 - WORK_DIR="$(pwd)"
 - eval "${MATRIX_EVAL}"
 
 install:
 - cd ~/
-- if [ ! -d "~/vcpkg" ]; then git clone https://github.com/Microsoft/vcpkg.git fi
-- cd vcpkg
-- ./bootstrap-vcpkg.sh
-- sudo ./vcpkg integrate install
-- git apply -v --ignore-whitespace ${WORK_DIR}/vcpkg.patch
-- ./vcpkg install beast:x64-linux openssl:x64-linux
+# - if [ ! -d "~/vcpkg" ]; then git clone https://github.com/Microsoft/vcpkg.git fi
+# - cd vcpkg
+# - ./bootstrap-vcpkg.sh
+# - sudo ./vcpkg integrate install
+# - git apply -v --ignore-whitespace ${WORK_DIR}/vcpkg.patch
+# - ./vcpkg install beast:x64-linux openssl:x64-linux
 
 script:
-- echo "${WORK_DIR}"
 - cd "${WORK_DIR}"
 - mkdir build-travis
 - cd build-travis
