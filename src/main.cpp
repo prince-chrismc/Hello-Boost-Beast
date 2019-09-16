@@ -33,16 +33,16 @@ namespace http = boost::beast::http; // from <boost/beast/http.hpp>
 
 namespace my_program_state
 {
-std::size_t request_count()
-{
-	static std::size_t count = 0;
-	return ++count;
-}
+	std::size_t request_count()
+	{
+		static std::size_t count = 0;
+		return ++count;
+	}
 
-std::time_t now()
-{
-	return std::time(0);
-}
+	std::time_t now()
+	{
+		return std::time(0);
+	}
 } // namespace my_program_state
 
 class http_connection : public std::enable_shared_from_this<http_connection>
@@ -61,11 +61,12 @@ public:
 
 private:
 	tcp::socket socket_;						  // The socket for the currently connected client.
-	boost::beast::flat_buffer buffer_{8192};	  // The buffer for performing reads.
+	boost::beast::flat_buffer buffer_{ 8192 };	  // The buffer for performing reads.
 	http::request<http::dynamic_body> request_;   // The request message.
 	http::response<http::dynamic_body> response_; // The response message.
 	boost::asio::basic_waitable_timer<std::chrono::steady_clock> deadline_{
-		socket_.get_executor().context(), std::chrono::seconds(60)}; // The timer for putting a deadline on connection processing.
+		socket_.get_executor().context(), std::chrono::seconds(60) }; // The timer for putting a deadline on connection processing.
+	size_t remaining_{50};
 
 	// Asynchronously receive a complete request message.
 	void read_request()
@@ -77,10 +78,10 @@ private:
 			buffer_,
 			request_,
 			[self](boost::beast::error_code ec,
-				   std::size_t bytes_transferred) {
-				boost::ignore_unused(bytes_transferred);
-				if (!ec)
-					self->process_request();
+				std::size_t bytes_transferred) {
+					boost::ignore_unused(bytes_transferred);
+					if (!ec)
+						self->process_request();
 			});
 	}
 
@@ -116,6 +117,8 @@ private:
 	// Construct a response message based on the program state.
 	void create_response()
 	{
+		response_.body().consume(response_.body().size());
+
 		if (request_.target() == "/count")
 		{
 			response_.set(http::field::content_type, "text/html");
@@ -159,6 +162,13 @@ private:
 
 		response_.set(http::field::content_length, response_.body().size());
 
+		if (request_.version() == 11) {
+			response_.set(http::field::keep_alive, "timeout=60, max=" + std::to_string(remaining_));
+		}
+		else {
+			response_.set(http::field::connection, "closed");
+		}
+
 		http::async_write(
 			socket_,
 			response_,
@@ -170,6 +180,7 @@ private:
 				}
 				else
 				{
+					self->remaining_ -= 1;
 					self->deadline_.expires_after(std::chrono::seconds(60));
 					self->read_request();
 				}
@@ -200,24 +211,25 @@ private:
 class http_server
 {
 public:
-	http_server(tcp::acceptor &acceptor, tcp::socket &socket) : acceptor_(acceptor),
-																socket_(socket)
+	http_server(tcp::acceptor& acceptor, tcp::socket& socket) : acceptor_(acceptor),
+		socket_(socket)
 	{
+		accept();
 	}
 
 private:
-	tcp::acceptor &acceptor_;
-	tcp::socket &socket_;
+	tcp::acceptor& acceptor_;
+	tcp::socket& socket_;
 
 	void accept()
 	{
 		acceptor_.async_accept(socket_,
-							   [&](boost::beast::error_code ec) {
-								   if (!ec)
-									   std::make_shared<http_connection>(std::move(socket_))->start();
+			[&](boost::beast::error_code ec) {
+				if (!ec)
+					std::make_shared<http_connection>(std::move(socket_))->start();
 
-								   accept();
-							   });
+				accept();
+			});
 	}
 };
 
@@ -228,15 +240,15 @@ int main()
 		auto const address = boost::asio::ip::make_address("0.0.0.0");
 		unsigned short port = static_cast<unsigned short>(80);
 
-		boost::asio::io_context ioc{1};
+		boost::asio::io_context ioc{ 1 };
 
-		tcp::acceptor acceptor{ioc, {address, port}};
-		tcp::socket socket{ioc};
+		tcp::acceptor acceptor{ ioc, {address, port} };
+		tcp::socket socket{ ioc };
 		http_server(acceptor, socket);
 
 		ioc.run();
 	}
-	catch (std::exception const &e)
+	catch (std::exception const& e)
 	{
 		std::cerr << "Error: " << e.what() << std::endl;
 		return EXIT_FAILURE;
