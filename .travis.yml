@@ -6,7 +6,7 @@ matrix:
       dist: bionic
 
 before_install:
-- pwd
+- WOKRDIR="$(pwd)"
 - eval "${MATRIX_EVAL}"
 
 install:
@@ -18,7 +18,8 @@ install:
 - ./vcpkg install beast:x64-linux openssl:x64-linux
 
 script:
-- cd ~/prince-chrismc/Hello-Boost-Beast
+- echo "${WORKDIR}"
+- cd ~/build/prince-chrismc/Hello-Boost-Beast
 - mkdir build-travis
 - cd build-travis
 - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
