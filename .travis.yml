@@ -1,5 +1,9 @@
 language: cpp
 
+cache:
+  directories:
+    - /home/travis/vcpkg
+
 matrix:
   include:
     - os: linux
