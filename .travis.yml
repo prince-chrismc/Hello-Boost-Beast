@@ -20,7 +20,7 @@ install:
     cd vcpkg && \
     ./bootstrap-vcpkg.sh && \
     sudo ./vcpkg integrate install && \
-    git apply -v --ignore-whitespace ${WORK_DIR}/vcpkg.patch
+    git apply -v --ignore-whitespace "${WORK_DIR}"/vcpkg.patch;
   else
     cd vcpkg && \
     git pull;
