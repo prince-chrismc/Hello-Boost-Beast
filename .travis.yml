@@ -11,7 +11,7 @@ matrix:
 
 before_install:
 - pwd
-- WOKRDIR="$(pwd)"
+- WORK_DIR="$(pwd)"
 - eval "${MATRIX_EVAL}"
 
 install:
@@ -20,12 +20,12 @@ install:
 - cd vcpkg
 - ./bootstrap-vcpkg.sh
 - sudo ./vcpkg integrate install
-- git apply -v --ignore-whitespace ${WOKRDIR}/vcpkg.patch
+- git apply -v --ignore-whitespace ${WORK_DIR}/vcpkg.patch
 - ./vcpkg install beast:x64-linux openssl:x64-linux
 
 script:
-- echo "${WORKDIR}"
-- cd "${WORKDIR}"
+- echo "${WORK_DIR}"
+- cd "${WORK_DIR}"
 - mkdir build-travis
 - cd build-travis
 - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
