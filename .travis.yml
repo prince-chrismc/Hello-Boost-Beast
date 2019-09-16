@@ -10,6 +10,7 @@ matrix:
       dist: bionic
 
 before_install:
+- pwd
 - WOKRDIR="$(pwd)"
 - eval "${MATRIX_EVAL}"
 
@@ -23,6 +24,7 @@ install:
 - ./vcpkg install beast:x64-linux openssl:x64-linux
 
 script:
+- echo "${WORKDIR}"
 - cd "${WORKDIR}"
 - mkdir build-travis
 - cd build-travis
