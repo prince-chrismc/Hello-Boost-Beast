@@ -4,6 +4,7 @@ if [ ! -d "$1" ]; then
 fi
 
 if [ ! -d "vcpkg" ]; then
+   cd ~/
    git clone https://github.com/Microsoft/vcpkg.git &&
    cd vcpkg &&
    ./bootstrap-vcpkg.sh &&
