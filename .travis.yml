@@ -18,8 +18,7 @@ install:
 - ./vcpkg install beast:x64-linux openssl:x64-linux
 
 script:
-- echo "${WORKDIR}"
-- cd ~/build/prince-chrismc/Hello-Boost-Beast
+- cd "${WORKDIR}"
 - mkdir build-travis
 - cd build-travis
 - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
