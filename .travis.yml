@@ -15,16 +15,7 @@ before_install:
 
 install:
 - cd ~/
-- if [ ! -d "vcpkg" ]; then \
-    git clone https://github.com/Microsoft/vcpkg.git && \
-    cd vcpkg && \
-    ./bootstrap-vcpkg.sh && \
-    sudo ./vcpkg integrate install && \
-    git apply -v --ignore-whitespace "${WORK_DIR}"/vcpkg.patch; \
-  else \
-    cd vcpkg && \
-    git pull; \
-  fi
+- ./ci/install-vcpkg.sh "${WORK_DIR}"
 - ./vcpkg install beast:x64-linux openssl:x64-linux
 
 script:
