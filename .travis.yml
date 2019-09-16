@@ -19,6 +19,7 @@ install:
 - cd vcpkg
 - ./bootstrap-vcpkg.sh
 - sudo ./vcpkg integrate install
+- git apply -v --ignore-whitespace ${WOKRDIR}/vcpkg.patch
 - ./vcpkg install beast:x64-linux openssl:x64-linux
 
 script:
