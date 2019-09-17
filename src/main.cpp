@@ -48,25 +48,39 @@ namespace my_program_state
 class http_connection : public std::enable_shared_from_this<http_connection>
 {
 public:
-	http_connection(tcp::socket socket) : socket_(std::move(socket))
+	http_connection(tcp::socket socket, boost::asio::ssl::context& context)
+    		: socket_(std::move(socket), context)
 	{
 	}
 
 	// Initiate the asynchronous operations associated with the connection.
 	void start()
 	{
-		read_request();
-		check_deadline();
+		do_handshake();
 	}
 
 private:
-	tcp::socket socket_;						  // The socket for the currently connected client.
+	boost::asio::ssl::stream<tcp::socket> socket_;	  // The socket for the currently connected client.
 	boost::beast::flat_buffer buffer_{ 8192 };	  // The buffer for performing reads.
 	http::request<http::dynamic_body> request_;   // The request message.
 	http::response<http::dynamic_body> response_; // The response message.
 	boost::asio::basic_waitable_timer<std::chrono::steady_clock> deadline_{
 		socket_.get_executor().context(), std::chrono::seconds(60) }; // The timer for putting a deadline on connection processing.
 	size_t remaining_{50};
+
+void do_handshake()
+  {
+    auto self(shared_from_this());
+    socket_.async_handshake(boost::asio::ssl::stream_base::server, 
+        [self](const boost::system::error_code& error)
+        {
+          if (!error)
+          {
+            	read_request()
+		check_deadline();
+          }
+        });
+  }
 
 	// Asynchronously receive a complete request message.
 	void read_request()
@@ -214,19 +228,21 @@ public:
 	http_server(tcp::acceptor& acceptor, tcp::socket& socket) : acceptor_(acceptor),
 		socket_(socket)
 	{
+		load_server_certificate(context_);
 		accept();
 	}
 
 private:
 	tcp::acceptor& acceptor_;
 	tcp::socket& socket_;
-
+	boost::asio::ssl::context context_{ssl::context::tlsv12};
+	
 	void accept()
 	{
 		acceptor_.async_accept(socket_,
 			[&](boost::beast::error_code ec) {
 				if (!ec)
-					std::make_shared<http_connection>(std::move(socket_))->start();
+					std::make_shared<http_connection>(std::move(socket_), context_)->start();
 
 				accept();
 			});
@@ -239,7 +255,7 @@ int main()
 	{
 		auto const address = boost::asio::ip::make_address("0.0.0.0");
 		unsigned short port = static_cast<unsigned short>(80);
-
+		
 		boost::asio::io_context ioc{ 1 };
 
 		tcp::acceptor acceptor{ ioc, {address, port} };
