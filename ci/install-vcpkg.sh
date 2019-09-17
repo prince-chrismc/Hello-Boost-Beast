@@ -3,7 +3,7 @@ if [ ! -d "$1" ]; then
    echo "usage: $0 <PATH>"
 fi
 
-if [ ! -d "vcpkg" ]; then
+if [ ! -d "~/vcpkg" ]; then
    cd ~/
    git clone https://github.com/Microsoft/vcpkg.git &&
    cd vcpkg &&
@@ -11,6 +11,6 @@ if [ ! -d "vcpkg" ]; then
    sudo ./vcpkg integrate install &&
    git apply -v --ignore-whitespace "$1"/vcpkg.patch
 else
-   cd vcpkg &&
+   cd ~/vcpkg &&
    git pull;
 fi
