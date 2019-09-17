@@ -71,25 +71,23 @@ private:
 		stream_.get_executor().context(), std::chrono::seconds(60) }; // The timer for putting a deadline on connection processing.
 	size_t remaining_{50};
 
-void do_handshake()
-  {
-    auto self(shared_from_this());
-     // Set the timeout.
-        boost::beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
+	void do_handshake()
+  	{
+		auto self(shared_from_this());
 
-        // Perform the SSL handshake
-        stream_.async_handshake(
-		boost::asio::ssl::stream_base::server, 
-		[self](const boost::system::error_code& error)
-		{
-		  if (!error)
-		  {
-			self->read_request();
-			self->check_deadline();
-		  }
-		}
-	);
-  }
+		// Perform the SSL handshake
+		stream_.async_handshake(
+			boost::asio::ssl::stream_base::server, 
+			[self](const boost::system::error_code& error)
+			{
+			  if (!error)
+			  {
+				self->read_request();
+				self->check_deadline();
+			  }
+			}
+		);
+  	}
 
 	// Asynchronously receive a complete request message.
 	void read_request()
@@ -97,10 +95,7 @@ void do_handshake()
 		// Make the request empty before reading,
 		// otherwise the operation behavior is undefined.
 		request_ = {};
-
-		// Set the timeout.
-		boost::beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
-	
+		
 		auto self = shared_from_this();
 
 		http::async_read(
@@ -239,9 +234,6 @@ void do_handshake()
 	
 	void do_close()
 	{
-		// Set the timeout.
-		boost::beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
-
 		// Perform the SSL shutdown
 		stream_.async_shutdown(
 			[](boost::beast::error_code ec)
