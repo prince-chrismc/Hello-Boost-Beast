@@ -24,6 +24,8 @@ SOFTWARE.
 
 */
 
+#include "server_certificate.hpp"
+
 #include <boost/beast.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <iostream>
@@ -50,7 +52,7 @@ class http_connection : public std::enable_shared_from_this<http_connection>
 {
 public:
 	http_connection(tcp::socket socket, boost::asio::ssl::context& context)
-    		: socket_(std::move(socket), context)
+    		: stream_(std::move(socket), context)
 	{
 	}
 
@@ -61,7 +63,7 @@ public:
 	}
 
 private:
-	boost::asio::ssl::stream<tcp::socket> socket_;	  // The socket for the currently connected client.
+	boost::asio::ssl::stream<tcp::socket> stream_;	  // The socket for the currently connected client.
 	boost::beast::flat_buffer buffer_{ 8192 };	  // The buffer for performing reads.
 	http::request<http::dynamic_body> request_;   // The request message.
 	http::response<http::dynamic_body> response_; // The response message.
@@ -77,8 +79,8 @@ void do_handshake()
         {
           if (!error)
           {
-            	read_request()
-		check_deadline();
+            	self->read_request();
+		self->check_deadline();
           }
         });
   }
@@ -89,7 +91,7 @@ void do_handshake()
 		auto self = shared_from_this();
 
 		http::async_read(
-			socket_,
+			stream_,
 			buffer_,
 			request_,
 			[self](boost::beast::error_code ec,
@@ -185,7 +187,7 @@ void do_handshake()
 		}
 
 		http::async_write(
-			socket_,
+			stream_,
 			response_,
 			[self](boost::beast::error_code ec, std::size_t) {
 				if (self->request_.version() == 10)
@@ -214,9 +216,17 @@ void do_handshake()
 					self->check_deadline();
 				}
 				else if (!ec)
-				{
-					// Close socket to cancel any outstanding operation.
-					self->socket_.close(ec);
+				{					
+					// Set the timeout.
+					beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
+
+					// Perform the SSL shutdown
+					stream_.async_shutdown(
+						[self](boost::beast::error_code ec)
+						{
+							if(ec) return fail(ec, "shutdown");
+						}
+					);
 				}
 			});
 	}
@@ -257,7 +267,7 @@ int main()
 		auto const address = boost::asio::ip::make_address("0.0.0.0");
 		unsigned short port = static_cast<unsigned short>(80);
 		
-		boost::asio::io_context ioc{ 1 };
+		boost::asio::io_context ioc{ 1 }; // Only use one thread
 
 		tcp::acceptor acceptor{ ioc, {address, port} };
 		tcp::socket socket{ ioc };
