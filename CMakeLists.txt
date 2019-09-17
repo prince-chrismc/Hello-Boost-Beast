@@ -12,4 +12,10 @@ find_package(OpenSSL REQUIRED)
 
 add_executable(restful src/main.cpp)
 
+set_target_properties(restful PROPERTIES
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS OFF
+)
+
 target_link_libraries(restful PRIVATE Boost::system Boost::thread OpenSSL::SSL OpenSSL::Crypto)
