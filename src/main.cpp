@@ -25,6 +25,7 @@ SOFTWARE.
 */
 
 #include <boost/beast.hpp>
+#include <boost/beast/ssl.hpp>
 #include <iostream>
 
 namespace ip = boost::asio::ip;		 // from <boost/asio.hpp>
