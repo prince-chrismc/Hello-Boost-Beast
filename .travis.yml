@@ -8,14 +8,24 @@ matrix:
   include:
     - os: linux
       dist: bionic
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+      env:
+      - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
 
 before_install:
 - WORK_DIR="$(pwd)"
-- eval "${MATRIX_EVAL}"
 
 install:
 - ./ci/install-vcpkg.sh "${WORK_DIR}"
 - ~/vcpkg/vcpkg install beast:x64-linux openssl:x64-linux
+
+before_script:
+- eval "${MATRIX_EVAL}"
 
 script:
 - cd "${WORK_DIR}"
