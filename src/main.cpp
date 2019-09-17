@@ -68,37 +68,52 @@ private:
 	http::request<http::dynamic_body> request_;   // The request message.
 	http::response<http::dynamic_body> response_; // The response message.
 	boost::asio::basic_waitable_timer<std::chrono::steady_clock> deadline_{
-		socket_.get_executor().context(), std::chrono::seconds(60) }; // The timer for putting a deadline on connection processing.
+		stream_.get_executor().context(), std::chrono::seconds(60) }; // The timer for putting a deadline on connection processing.
 	size_t remaining_{50};
 
 void do_handshake()
   {
     auto self(shared_from_this());
-    socket_.async_handshake(boost::asio::ssl::stream_base::server, 
-        [self](const boost::system::error_code& error)
-        {
-          if (!error)
-          {
-            	self->read_request();
-		self->check_deadline();
-          }
-        });
+     // Set the timeout.
+        beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
+
+        // Perform the SSL handshake
+        stream_.async_handshake(
+		boost::asio::ssl::stream_base::server, 
+		[self](const boost::system::error_code& error)
+		{
+		  if (!error)
+		  {
+			self->read_request();
+			self->check_deadline();
+		  }
+		}
+	);
   }
 
 	// Asynchronously receive a complete request message.
 	void read_request()
 	{
+		// Make the request empty before reading,
+		// otherwise the operation behavior is undefined.
+		request_ = {};
+
+		// Set the timeout.
+		beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
+	
 		auto self = shared_from_this();
 
 		http::async_read(
 			stream_,
 			buffer_,
 			request_,
-			[self](boost::beast::error_code ec,
-				std::size_t bytes_transferred) {
-					boost::ignore_unused(bytes_transferred);
-					if (!ec)
-						self->process_request();
+			[self](boost::beast::error_code ec, std::size_t bytes_transferred) {
+				boost::ignore_unused(bytes_transferred);
+				if(ec == http::error::end_of_stream)
+            				return do_close();
+	    
+				if (!ec)
+					self->process_request();
 			});
 	}
 
@@ -192,7 +207,7 @@ void do_handshake()
 			[self](boost::beast::error_code ec, std::size_t) {
 				if (self->request_.version() == 10)
 				{
-					self->socket_.shutdown(tcp::socket::shutdown_send, ec);
+					self->do_close();
 					self->deadline_.cancel();
 				}
 				else
@@ -217,18 +232,23 @@ void do_handshake()
 				}
 				else if (!ec)
 				{					
-					// Set the timeout.
-					beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
-
-					// Perform the SSL shutdown
-					stream_.async_shutdown(
-						[self](boost::beast::error_code ec)
-						{
-							if(ec) return fail(ec, "shutdown");
-						}
-					);
+					do_close();
 				}
 			});
+	}
+	
+	void do_close()
+	{
+		// Set the timeout.
+		beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
+
+		// Perform the SSL shutdown
+		stream_.async_shutdown(
+			[self](boost::beast::error_code ec)
+			{
+				if(ec) return fail(ec, "shutdown");
+			}
+		);
 	}
 };
 
