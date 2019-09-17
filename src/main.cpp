@@ -75,7 +75,7 @@ void do_handshake()
   {
     auto self(shared_from_this());
      // Set the timeout.
-        beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
+        boost::beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
 
         // Perform the SSL handshake
         stream_.async_handshake(
@@ -99,7 +99,7 @@ void do_handshake()
 		request_ = {};
 
 		// Set the timeout.
-		beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
+		boost::beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
 	
 		auto self = shared_from_this();
 
@@ -110,7 +110,7 @@ void do_handshake()
 			[self](boost::beast::error_code ec, std::size_t bytes_transferred) {
 				boost::ignore_unused(bytes_transferred);
 				if(ec == http::error::end_of_stream)
-            				return do_close();
+            				return self->do_close();
 	    
 				if (!ec)
 					self->process_request();
@@ -232,7 +232,7 @@ void do_handshake()
 				}
 				else if (!ec)
 				{					
-					do_close();
+					self->do_close();
 				}
 			});
 	}
@@ -240,13 +240,13 @@ void do_handshake()
 	void do_close()
 	{
 		// Set the timeout.
-		beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
+		boost::beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
 
 		// Perform the SSL shutdown
 		stream_.async_shutdown(
-			[self](boost::beast::error_code ec)
+			[](boost::beast::error_code ec)
 			{
-				if(ec) return fail(ec, "shutdown");
+				if(!ec) return;
 			}
 		);
 	}
@@ -256,8 +256,10 @@ void do_handshake()
 class http_server
 {
 public:
-	http_server(tcp::acceptor& acceptor, tcp::socket& socket) : acceptor_(acceptor),
-		socket_(socket)
+	http_server(tcp::acceptor& acceptor, tcp::socket& socket) :
+		acceptor_(acceptor),
+		socket_(socket),
+		context_(boost::asio::ssl::context::tlsv12)
 	{
 		load_server_certificate(context_);
 		accept();
@@ -266,7 +268,7 @@ public:
 private:
 	tcp::acceptor& acceptor_;
 	tcp::socket& socket_;
-	boost::asio::ssl::context context_{ssl::context::tlsv12};
+	boost::asio::ssl::context context_;
 	
 	void accept()
 	{
