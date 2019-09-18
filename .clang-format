@@ -1,0 +1,11 @@
+﻿---
+BasedOnStyle: Google
+AccessModifierOffset: "-2"
+BreakBeforeBraces: Stroustrup
+Language: Cpp
+Standard: Cpp11
+UseTab: Never
+ColumnLimit: 0
+
+---
+
