@@ -29,7 +29,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <thread>
 #include <vector>
 
 using tcp = boost::asio::ip::tcp;     // from <boost/asio/ip/tcp.hpp>
@@ -181,12 +180,6 @@ void handle_request(boost::beast::string_view doc_root,
 
 //------------------------------------------------------------------------------
 
-// Report a failure
-void fail(boost::system::error_code ec, char const* what)
-{
-  std::cerr << what << ": " << ec.message() << "\n";
-}
-
 // Handles an HTTP server connection
 class https_connection : public std::enable_shared_from_this<https_connection> {
   // This is the C++11 equivalent of a generic lambda.
@@ -254,8 +247,7 @@ public:
 
   void on_handshake(boost::system::error_code ec)
   {
-    if (ec) return fail(ec, "handshake");
-
+    boost::asio::detail::throw_error(ec, "handshake");
     do_read();
   }
 
@@ -280,7 +272,7 @@ public:
     // This means they closed the connection
     if (ec == http::error::end_of_stream) return do_close();
 
-    if (ec) return fail(ec, "read");
+    boost::asio::detail::throw_error(ec, "read");
 
     // Send the response
     handle_request(*doc_root_, std::move(req_), lambda_);
@@ -291,7 +283,7 @@ public:
   {
     boost::ignore_unused(bytes_transferred);
 
-    if (ec) return fail(ec, "write");
+    boost::asio::detail::throw_error(ec, "write");
 
     if (close) {
       // This means we should close the connection, usually because
@@ -316,7 +308,7 @@ public:
 
   void on_shutdown(boost::system::error_code ec)
   {
-    if (ec) return fail(ec, "shutdown");
+    boost::asio::detail::throw_error(ec, "shutdown");
 
     // At this point the connection is closed gracefully
   }
