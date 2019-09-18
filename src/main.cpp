@@ -251,7 +251,7 @@ public:
 	http_server(tcp::acceptor& acceptor, tcp::socket& socket) :
 		acceptor_(acceptor),
 		socket_(socket),
-		context_(boost::asio::ssl::context::tlsv12)
+		context_(boost::asio::ssl::context::tls_server)
 	{
 		load_server_certificate(context_);
 		accept();
@@ -279,7 +279,7 @@ int main()
 	try
 	{
 		auto const address = boost::asio::ip::make_address("0.0.0.0");
-		unsigned short port = static_cast<unsigned short>(80);
+		unsigned short port = static_cast<unsigned short>(443);
 		
 		boost::asio::io_context ioc{ 1 }; // Only use one thread
 

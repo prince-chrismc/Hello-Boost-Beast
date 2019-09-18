@@ -29,66 +29,66 @@ void
 load_server_certificate(boost::asio::ssl::context& ctx)
 {
     /*
-        The certificate was generated from CMD.EXE on Windows 10 using:
-
-        winpty openssl dhparam -out dh.pem 2048
-        winpty openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 10000 -out cert.pem -subj "//C=US\ST=CA\L=Los Angeles\O=Beast\CN=www.example.com"
+        openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 9999 -out certificate.pem -subj "/C=CA/ST=Quebec/L=Montreal/O=prince-chrismc/OU=Hello-Boost-Beast/CN=https.testserver.lan"
     */
 
-    std::string const cert =
-        "-----BEGIN CERTIFICATE-----\n"
-        "MIIDaDCCAlCgAwIBAgIJAO8vBu8i8exWMA0GCSqGSIb3DQEBCwUAMEkxCzAJBgNV\n"
-        "BAYTAlVTMQswCQYDVQQIDAJDQTEtMCsGA1UEBwwkTG9zIEFuZ2VsZXNPPUJlYXN0\n"
-        "Q049d3d3LmV4YW1wbGUuY29tMB4XDTE3MDUwMzE4MzkxMloXDTQ0MDkxODE4Mzkx\n"
-        "MlowSTELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAkNBMS0wKwYDVQQHDCRMb3MgQW5n\n"
-        "ZWxlc089QmVhc3RDTj13d3cuZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3DQEBAQUA\n"
-        "A4IBDwAwggEKAoIBAQDJ7BRKFO8fqmsEXw8v9YOVXyrQVsVbjSSGEs4Vzs4cJgcF\n"
-        "xqGitbnLIrOgiJpRAPLy5MNcAXE1strVGfdEf7xMYSZ/4wOrxUyVw/Ltgsft8m7b\n"
-        "Fu8TsCzO6XrxpnVtWk506YZ7ToTa5UjHfBi2+pWTxbpN12UhiZNUcrRsqTFW+6fO\n"
-        "9d7xm5wlaZG8cMdg0cO1bhkz45JSl3wWKIES7t3EfKePZbNlQ5hPy7Pd5JTmdGBp\n"
-        "yY8anC8u4LPbmgW0/U31PH0rRVfGcBbZsAoQw5Tc5dnb6N2GEIbq3ehSfdDHGnrv\n"
-        "enu2tOK9Qx6GEzXh3sekZkxcgh+NlIxCNxu//Dk9AgMBAAGjUzBRMB0GA1UdDgQW\n"
-        "BBTZh0N9Ne1OD7GBGJYz4PNESHuXezAfBgNVHSMEGDAWgBTZh0N9Ne1OD7GBGJYz\n"
-        "4PNESHuXezAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQCmTJVT\n"
-        "LH5Cru1vXtzb3N9dyolcVH82xFVwPewArchgq+CEkajOU9bnzCqvhM4CryBb4cUs\n"
-        "gqXWp85hAh55uBOqXb2yyESEleMCJEiVTwm/m26FdONvEGptsiCmF5Gxi0YRtn8N\n"
-        "V+KhrQaAyLrLdPYI7TrwAOisq2I1cD0mt+xgwuv/654Rl3IhOMx+fKWKJ9qLAiaE\n"
-        "fQyshjlPP9mYVxWOxqctUdQ8UnsUKKGEUcVrA08i1OAnVKlPFjKBvk+r7jpsTPcr\n"
-        "9pWXTO9JrYMML7d+XRSZA1n3856OqZDX4403+9FnXCvfcLZLLKTBvwwFgEFGpzjK\n"
-        "UEVbkhd5qstF6qWK\n"
-        "-----END CERTIFICATE-----\n";
+    const std::string cert = R"###(-----BEGIN CERTIFICATE-----
+MIID7TCCAtWgAwIBAgIUNawTVfPRT7MAbtZZiEJ1luaCtLgwDQYJKoZIhvcNAQEL
+BQAwgYUxCzAJBgNVBAYTAkNBMQ8wDQYDVQQIDAZRdWViZWMxETAPBgNVBAcMCE1v
+bnRyZWFsMRcwFQYDVQQKDA5wcmluY2UtY2hyaXNtYzEaMBgGA1UECwwRSGVsbG8t
+Qm9vc3QtQmVhc3QxHTAbBgNVBAMMFGh0dHBzLnRlc3RzZXJ2ZXIubGFuMB4XDTE5
+MDkxODAwNDYxNloXDTQ3MDIwMjAwNDYxNlowgYUxCzAJBgNVBAYTAkNBMQ8wDQYD
+VQQIDAZRdWViZWMxETAPBgNVBAcMCE1vbnRyZWFsMRcwFQYDVQQKDA5wcmluY2Ut
+Y2hyaXNtYzEaMBgGA1UECwwRSGVsbG8tQm9vc3QtQmVhc3QxHTAbBgNVBAMMFGh0
+dHBzLnRlc3RzZXJ2ZXIubGFuMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEAxM2va5Yb+pS6yB+DztCrStpHWTokBeeYXrTNQoMdVxMWo1q/4HJ0rrsWxuTU
+ZipcjTsBmIqmFrO6C6l+CC2SXAYT3YVQGD3A3v4z6ORg9rkOHMGxBrAtjR7Jw46k
++6MWTR8/RHmC+O8+8fvsQfwoEPP3haxOc4NYjjtMfeN9x8knJOxHq1zdCLUYYd+p
+wgqWWW4q8V2YeaYr4GPCZ7OR0gNfJoN/vudZzAbQSQe5N0jzTka304Ajxd9f3uqc
+QcxnL8RRYFPRo3OTJXcByo3aJyLcg3zel1EB9LajOCZs6yG6Cd8Ror7eDN86I3G4
+cyjQm9Ed3id9SGGIcqx1SMjONwIDAQABo1MwUTAdBgNVHQ4EFgQUsUKo3HIcywGh
+FKen16lRPeabs80wHwYDVR0jBBgwFoAUsUKo3HIcywGhFKen16lRPeabs80wDwYD
+VR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAXTkz+SwQaR1QTdW58coL
+dF8CFXLQmF8UIViblL0eGRf3Lj0EE7tLH042z6aqRaaLrlVFfopnsXtaxLQcMLCK
+YCUfTpYpwCLtotZMZH7QKaW+zn4vk4fdA3B2O+bwNJtRTalNRTtc3DefZItnrPVt
+NKhOUx9rWV1uTmfa7nIPg6Q+ivCfJGQ4C6i/voEoJP+vp8ulcfcpIDvMFcNIt/kh
+k7E/gBwG6OmDTixTnGKH/8pdyoxRZ7eKZCFmv9ibmfRbYdLQYSgEgLbxF89JQDXJ
+w2FpnEAUeba4NqazNyQqbcgobkudqS2Da/m5A1FhC57nPQ58LlAMWOD+eopZu8bh
+cg==
+-----END CERTIFICATE-----
+)###";
 
-    std::string const key =
-        "-----BEGIN PRIVATE KEY-----\n"
-        "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDJ7BRKFO8fqmsE\n"
-        "Xw8v9YOVXyrQVsVbjSSGEs4Vzs4cJgcFxqGitbnLIrOgiJpRAPLy5MNcAXE1strV\n"
-        "GfdEf7xMYSZ/4wOrxUyVw/Ltgsft8m7bFu8TsCzO6XrxpnVtWk506YZ7ToTa5UjH\n"
-        "fBi2+pWTxbpN12UhiZNUcrRsqTFW+6fO9d7xm5wlaZG8cMdg0cO1bhkz45JSl3wW\n"
-        "KIES7t3EfKePZbNlQ5hPy7Pd5JTmdGBpyY8anC8u4LPbmgW0/U31PH0rRVfGcBbZ\n"
-        "sAoQw5Tc5dnb6N2GEIbq3ehSfdDHGnrvenu2tOK9Qx6GEzXh3sekZkxcgh+NlIxC\n"
-        "Nxu//Dk9AgMBAAECggEBAK1gV8uETg4SdfE67f9v/5uyK0DYQH1ro4C7hNiUycTB\n"
-        "oiYDd6YOA4m4MiQVJuuGtRR5+IR3eI1zFRMFSJs4UqYChNwqQGys7CVsKpplQOW+\n"
-        "1BCqkH2HN/Ix5662Dv3mHJemLCKUON77IJKoq0/xuZ04mc9csykox6grFWB3pjXY\n"
-        "OEn9U8pt5KNldWfpfAZ7xu9WfyvthGXlhfwKEetOuHfAQv7FF6s25UIEU6Hmnwp9\n"
-        "VmYp2twfMGdztz/gfFjKOGxf92RG+FMSkyAPq/vhyB7oQWxa+vdBn6BSdsfn27Qs\n"
-        "bTvXrGe4FYcbuw4WkAKTljZX7TUegkXiwFoSps0jegECgYEA7o5AcRTZVUmmSs8W\n"
-        "PUHn89UEuDAMFVk7grG1bg8exLQSpugCykcqXt1WNrqB7x6nB+dbVANWNhSmhgCg\n"
-        "VrV941vbx8ketqZ9YInSbGPWIU/tss3r8Yx2Ct3mQpvpGC6iGHzEc/NHJP8Efvh/\n"
-        "CcUWmLjLGJYYeP5oNu5cncC3fXUCgYEA2LANATm0A6sFVGe3sSLO9un1brA4zlZE\n"
-        "Hjd3KOZnMPt73B426qUOcw5B2wIS8GJsUES0P94pKg83oyzmoUV9vJpJLjHA4qmL\n"
-        "CDAd6CjAmE5ea4dFdZwDDS8F9FntJMdPQJA9vq+JaeS+k7ds3+7oiNe+RUIHR1Sz\n"
-        "VEAKh3Xw66kCgYB7KO/2Mchesu5qku2tZJhHF4QfP5cNcos511uO3bmJ3ln+16uR\n"
-        "GRqz7Vu0V6f7dvzPJM/O2QYqV5D9f9dHzN2YgvU9+QSlUeFK9PyxPv3vJt/WP1//\n"
-        "zf+nbpaRbwLxnCnNsKSQJFpnrE166/pSZfFbmZQpNlyeIuJU8czZGQTifQKBgHXe\n"
-        "/pQGEZhVNab+bHwdFTxXdDzr+1qyrodJYLaM7uFES9InVXQ6qSuJO+WosSi2QXlA\n"
-        "hlSfwwCwGnHXAPYFWSp5Owm34tbpp0mi8wHQ+UNgjhgsE2qwnTBUvgZ3zHpPORtD\n"
-        "23KZBkTmO40bIEyIJ1IZGdWO32q79nkEBTY+v/lRAoGBAI1rbouFYPBrTYQ9kcjt\n"
-        "1yfu4JF5MvO9JrHQ9tOwkqDmNCWx9xWXbgydsn/eFtuUMULWsG3lNjfst/Esb8ch\n"
-        "k5cZd6pdJZa4/vhEwrYYSuEjMCnRb0lUsm7TsHxQrUd6Fi/mUuFU/haC0o0chLq7\n"
-        "pVOUFq5mW8p0zbtfHbjkgxyF\n"
-        "-----END PRIVATE KEY-----\n";
+    const std::string key = R"###(-----BEGIN PRIVATE KEY-----
+MIIEwAIBADANBgkqhkiG9w0BAQEFAASCBKowggSmAgEAAoIBAQDEza9rlhv6lLrI
+H4PO0KtK2kdZOiQF55hetM1Cgx1XExajWr/gcnSuuxbG5NRmKlyNOwGYiqYWs7oL
+qX4ILZJcBhPdhVAYPcDe/jPo5GD2uQ4cwbEGsC2NHsnDjqT7oxZNHz9EeYL47z7x
+++xB/CgQ8/eFrE5zg1iOO0x9433HySck7EerXN0ItRhh36nCCpZZbirxXZh5pivg
+Y8Jns5HSA18mg3++51nMBtBJB7k3SPNORrfTgCPF31/e6pxBzGcvxFFgU9Gjc5Ml
+dwHKjdonItyDfN6XUQH0tqM4JmzrIboJ3xGivt4M3zojcbhzKNCb0R3eJ31IYYhy
+rHVIyM43AgMBAAECggEBAJd2TVmZr3LM4GuAhaq3wfzbvSmYq3y33vaUY5ya2AvZ
+rwSNpTqSG+cWKdNs7WKrm4s+LF4/5s92ButOyKZ2nDuimctU/G2LqVJ1hXHpwg5g
+IdJT53BkSspfNZ0BvUvFGjbEo6aJdhkr19/YqN2nuRZDDO6dy8ru/UqJrLb+TCFi
+/sKmtQfh5otYRXxNGq8kUXL3NuQR6cK5J+zHVL1oq59PzqKSzNlUPH5cP3XQB5ve
+ichS7o3cFpM3Nf9cs8jj9WxvhXEI+53VyL/ExEeF7JsmmU+vbgBlzWGdB1DLr6ZE
+r78Lm8oVMgd6LCebMZSstJLmYrolvoawNt1LAfb5WLECgYEA6Bdgb7TsOmu/BjTs
+PpDEuoFqFGHJQRsSuK0RvJ8B7PI4l3/wKuinKewPsf4MQtEe3kr4JNQ+ERbkAxWD
+x3D0mktF/KuT3tPyE4atYDqki7kQkBhWnTpQTvVPmyquI4DfnGJ/WljOHg8ux9Fv
+6Lzp4xi4KoQwh4xtJcmDWZ8YTLUCgYEA2RO17nwilNeJ98zY/Y9BsZ50vEAXqqfh
+5OxePzcKA5qn8RCtbC8JZHRUZcGUc8pvm8tmvU2CbbjPKJOrIdBTme6hLh52ATX2
+tcS0UEfwbohJHKqcNmF1xc+B8oiBiDrsDhAoFXZBSbzX2EIx6+RXJFR1Y2BBhrrf
+9rTivpunbrsCgYEA2tF3dbpxYl9Fmfd5qT9ai7EKL69GTSDWVNGvwFN2QEza+FOC
+PyJcwNS0s48fRjvdy52JOUf2QKyBSzsUpIwlwfcoRCIMZ3ESckBu5CRGEQnpyMF5
+oAFjyB3W8SebSRPvP4VKJwdFRefwpiobRaYfKaKbuFIrYxENsyu7sFqkUWUCgYEA
+iRQqWewnxkgJxuKj0BKr0GcYnlv21fxn6LDenxq5hycdkFwQt3VIgBf5x7wja69V
+JVOfkEEm8PS4VI5TjenJMTaAr+fqar9SCNyrZNrY2GPVj3WpaanHvl9YVviem5Fh
+yUuolEz104Od5eF/NtAdu0JeUp/RISxXC6qUWPtgEssCgYEAhUJ3+gqqgGLM6TWp
+M3GuE5qt/LdjsK9iZ3fkSpyjw5IEZnJZWWC/uEqFtZRtgpMGtmUOQPNy9Odef54I
+W2YLdFkfy9QjUseiBP/LO3tNGd8QHh9XPWeLIDwXvtbHfTg92ZLzGA+15aSdbPY3
+5k7RrIS7P0ZnII6tfYrTG0jOtPI=
+-----END PRIVATE KEY-----
+)###";
 
-    std::string const dh =
+    const std::string dh =
         "-----BEGIN DH PARAMETERS-----\n"
         "MIIBCAKCAQEArzQc5mpm0Fs8yahDeySj31JZlwEphUdZ9StM2D8+Fo7TMduGtSi+\n"
         "/HRWVwHcTFAgrxVdm+dl474mOUqqaz4MpzIb6+6OVfWHbQJmXPepZKyu4LgUPvY/\n"
@@ -97,28 +97,24 @@ load_server_certificate(boost::asio::ssl::context& ctx)
         "oEEZdnZWANkkpR/m/pfgdmGPU66S2sXMHgsliViQWpDCYeehrvFRHEdR9NV+XJfC\n"
         "QMUk26jPTIVTLfXmmwU0u8vUkpR7LQKkwwIBAg==\n"
         "-----END DH PARAMETERS-----\n";
-    
-    ctx.set_password_callback(
-        [](std::size_t,
-            boost::asio::ssl::context_base::password_purpose)
-        {
-            return "test";
-        });
 
     ctx.set_options(
-        boost::asio::ssl::context::default_workarounds |
-        boost::asio::ssl::context::no_sslv2 |
-        boost::asio::ssl::context::single_dh_use);
+        boost::asio::ssl::context::default_workarounds)
+                //  boost::asio::ssl::context::no_sslv2 |
+                //  boost::asio::ssl::context::no_sslv3 |
+                //  boost::asio::ssl::context::no_tlsv1 |
+        /* boost::asio::ssl::context::single_dh_use)*/;
 
-    ctx.use_certificate_chain(
-        boost::asio::buffer(cert.data(), cert.size()));
+    ctx.use_certificate(
+        boost::asio::buffer(cert.data(), cert.size()),
+        boost::asio::ssl::context::file_format::pem);
 
     ctx.use_private_key(
         boost::asio::buffer(key.data(), key.size()),
         boost::asio::ssl::context::file_format::pem);
 
-    ctx.use_tmp_dh(
-        boost::asio::buffer(dh.data(), dh.size()));
+    // ctx.use_tmp_dh(
+    //     boost::asio::buffer(dh.data(), dh.size()));
 }
 
 #endif
