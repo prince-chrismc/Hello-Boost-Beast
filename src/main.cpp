@@ -79,6 +79,23 @@ std::string path_cat(boost::beast::string_view base, boost::beast::string_view p
   return result;
 }
 
+template <class Body>
+void set_connection_status_headers(http::response<Body>& out_msg, unsigned version, size_t remaining)
+{
+  if (version == 11) {
+    if (remaining > 0) {
+      out_msg.set(http::field::keep_alive, "timeout=60, max=" + std::to_string(remaining));
+    }
+    else {
+      out_msg.keep_alive(false);
+    }
+  }
+  else {
+    out_msg.keep_alive(false);
+    out_msg.set(http::field::connection, "closed");
+  }
+}
+
 // This function produces an HTTP response for the given
 // request. The type of the response object depends on the
 // contents of the request, so the interface requires the
@@ -86,36 +103,37 @@ std::string path_cat(boost::beast::string_view base, boost::beast::string_view p
 template <class Body, class Allocator, class Send>
 void handle_request(boost::beast::string_view doc_root,
                     http::request<Body, http::basic_fields<Allocator>>&& req,
+                    const size_t remaining,
                     Send&& send)
 {
   // Returns a bad request response
-  auto const bad_request = [&req](boost::beast::string_view why) {
+  auto const bad_request = [&req, remaining](boost::beast::string_view why) {
     http::response<http::string_body> res{http::status::bad_request, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     res.set(http::field::content_type, "text/html");
-    res.keep_alive(req.keep_alive());
+    set_connection_status_headers<http::string_body>(res, req.version(), remaining);
     res.body() = why.to_string();
     res.prepare_payload();
     return res;
   };
 
   // Returns a not found response
-  auto const not_found = [&req](boost::beast::string_view target) {
+  auto const not_found = [&req, remaining](boost::beast::string_view target) {
     http::response<http::string_body> res{http::status::not_found, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     res.set(http::field::content_type, "text/html");
-    res.keep_alive(req.keep_alive());
+    set_connection_status_headers<http::string_body>(res, req.version(), remaining);
     res.body() = "The resource '" + target.to_string() + "' was not found.";
     res.prepare_payload();
     return res;
   };
 
   // Returns a server error response
-  auto const server_error = [&req](boost::beast::string_view what) {
+  auto const server_error = [&req, remaining](boost::beast::string_view what) {
     http::response<http::string_body> res{http::status::internal_server_error, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     res.set(http::field::content_type, "text/html");
-    res.keep_alive(req.keep_alive());
+    set_connection_status_headers<http::string_body>(res, req.version(), remaining);
     res.body() = "An error occurred: '" + what.to_string() + "'";
     res.prepare_payload();
     return res;
@@ -154,7 +172,7 @@ void handle_request(boost::beast::string_view doc_root,
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     res.set(http::field::content_type, mime_type(path));
     res.content_length(size);
-    res.keep_alive(req.keep_alive());
+    set_connection_status_headers<http::empty_body>(res, req.version(), remaining);
     return send(std::move(res));
   }
 
@@ -165,7 +183,7 @@ void handle_request(boost::beast::string_view doc_root,
   res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(http::field::content_type, mime_type(path));
   res.content_length(size);
-  res.keep_alive(req.keep_alive());
+  set_connection_status_headers<http::file_body>(res, req.version(), remaining);
   return send(std::move(res));
 }
 
@@ -213,6 +231,10 @@ class https_connection : public std::enable_shared_from_this<https_connection> {
   std::shared_ptr<void> res_;
   send_lambda lambda_;
 
+  boost::asio::basic_waitable_timer<std::chrono::steady_clock> deadline_{
+      socket_.get_executor().context(), std::chrono::seconds(60)};  // The timer for putting a deadline on connection processing.
+  size_t remaining_{50};
+
 public:
   // Take ownership of the socket
   explicit https_connection(tcp::socket socket, ssl::context& ctx,
@@ -228,18 +250,22 @@ public:
   // Start the asynchronous operation
   void run()
   {
+    auto self = shared_from_this();
     // Perform the SSL handshake
     stream_.async_handshake(
         ssl::stream_base::server,
         boost::asio::bind_executor(
-            strand_, std::bind(&https_connection::on_handshake,
-                               shared_from_this(), std::placeholders::_1)));
+            strand_,
+            [self](boost::system::error_code ec) {
+              boost::asio::detail::throw_error(ec, "handshake");
+              self->on_handshake(ec);
+            }));
   }
 
   void on_handshake(boost::system::error_code ec)
   {
-    boost::asio::detail::throw_error(ec, "handshake");
     do_read();
+    check_deadline();
   }
 
   void do_read()
@@ -266,11 +292,10 @@ public:
     boost::asio::detail::throw_error(ec, "read");
 
     // Send the response
-    handle_request(*doc_root_, std::move(req_), lambda_);
+    handle_request(*doc_root_, std::move(req_), --remaining_, lambda_);
   }
 
-  void on_write(boost::system::error_code ec, std::size_t bytes_transferred,
-                bool close)
+  void on_write(boost::system::error_code ec, std::size_t bytes_transferred, bool close)
   {
     boost::ignore_unused(bytes_transferred);
 
@@ -285,22 +310,44 @@ public:
     // We're done with the response so delete it
     res_ = nullptr;
 
+    deadline_.expires_after(std::chrono::seconds(60));
+
     // Read another request
     do_read();
+  }
+
+  // Check whether we have spent enough time on this connection.
+  void check_deadline()
+  {
+    auto self = shared_from_this();
+
+    deadline_.async_wait(
+        [self](boost::beast::error_code ec) {
+          if (ec == boost::asio::error::operation_aborted) {
+            self->check_deadline();
+          }
+          else if (!ec) {
+            // Close socket to cancel any outstanding operation.
+            self->do_close();
+          }
+        });
   }
 
   void do_close()
   {
     // Perform the SSL shutdown
+    auto self = shared_from_this();
     stream_.async_shutdown(boost::asio::bind_executor(
-        strand_, std::bind(&https_connection::on_shutdown, shared_from_this(),
-                           std::placeholders::_1)));
+        strand_, [self](boost::system::error_code ec) { self->on_shutdown(ec); }));
   }
 
   void on_shutdown(boost::system::error_code ec)
   {
-    boost::asio::detail::throw_error(ec, "shutdown");
+    if (ec != boost::asio::error::eof)  // if remote has not already close underlying socket. https://stackoverflow.com/a/25703699/8480874
+      boost::asio::detail::throw_error(ec, "shutdown");
 
+    deadline_.cancel();
+    stream_.lowest_layer().close();
     // At this point the connection is closed gracefully
   }
 };
@@ -315,17 +362,17 @@ class https_server : public std::enable_shared_from_this<https_server> {
   std::shared_ptr<std::string const> doc_root_;
 
 public:
-  https_server(boost::asio::io_context& ioc, ssl::context& ctx,
+  https_server(boost::asio::io_context& ioc,
+               ssl::context& ctx,
                tcp::endpoint endpoint,
                std::shared_ptr<std::string const> const& doc_root)
       : ctx_(ctx), acceptor_(ioc), socket_(ioc), doc_root_(doc_root)
   {
-    acceptor_.open(endpoint.protocol());  // Open the acceptor
-    acceptor_.set_option(
-        boost::asio::socket_base::reuse_address(true));  // Allow address reuse
-    acceptor_.bind(endpoint);                            // Bind to the server address
-    acceptor_.listen(
-        boost::asio::socket_base::max_listen_connections);  // Start listening for connections
+    using socket = boost::asio::socket_base;
+    acceptor_.open(endpoint.protocol());                // Open the acceptor
+    acceptor_.set_option(socket::reuse_address(true));  // Allow address reuse
+    acceptor_.bind(endpoint);                           // Bind to the server address
+    acceptor_.listen(socket::max_listen_connections);   // Start listening for connections
   }
 
   // Start accepting incoming connections
@@ -342,19 +389,14 @@ public:
                            [self](boost::system::error_code ec) {
                              boost::asio::detail::throw_error(ec, "accept");
                              self->on_accept();
-                           }
-
-    );
+                           });
   }
 
   void on_accept()
   {
     // Create the https_connection and run it
-    std::make_shared<https_connection>(std::move(socket_), ctx_, doc_root_)
-        ->run();
-
-    // Accept another connection
-    do_accept();
+    std::make_shared<https_connection>(std::move(socket_), ctx_, doc_root_)->run();
+    do_accept();  // Accept another connection
   }
 };
 
@@ -369,6 +411,7 @@ int main(int argc, char* argv[])
               << argv[0] << " 0.0.0.0 8443 . \n";
     return EXIT_FAILURE;
   }
+
   auto const address = boost::asio::ip::make_address(argv[1]);
   auto const port = static_cast<unsigned short>(std::atoi(argv[2]));
   auto const doc_root = std::make_shared<std::string>(argv[3]);
