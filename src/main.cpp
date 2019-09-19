@@ -96,6 +96,16 @@ void set_connection_status_headers(http::response<Body>& out_msg, unsigned versi
   }
 }
 
+boost::beast::string_param get_date_value()
+{
+  char buf[256];
+  const time_t now = time(0);
+  const tm tm = *gmtime(&now);
+  const auto len = strftime(buf, sizeof buf, "%a, %d %b %Y %H:%M:%S %Z", &tm);
+
+  return {buf, len};
+}
+
 // This function produces an HTTP response for the given
 // request. The type of the response object depends on the
 // contents of the request, so the interface requires the
@@ -110,6 +120,7 @@ void handle_request(boost::beast::string_view doc_root,
   auto const bad_request = [&req, remaining](boost::beast::string_view why) {
     http::response<http::string_body> res{http::status::bad_request, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+    res.set(http::field::date, get_date_value());
     res.set(http::field::content_type, "text/html");
     set_connection_status_headers<http::string_body>(res, req.version(), remaining);
     res.body() = why.to_string();
@@ -121,6 +132,7 @@ void handle_request(boost::beast::string_view doc_root,
   auto const not_found = [&req, remaining](boost::beast::string_view target) {
     http::response<http::string_body> res{http::status::not_found, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+    res.set(http::field::date, get_date_value());
     res.set(http::field::content_type, "text/html");
     set_connection_status_headers<http::string_body>(res, req.version(), remaining);
     res.body() = "The resource '" + target.to_string() + "' was not found.";
@@ -132,6 +144,7 @@ void handle_request(boost::beast::string_view doc_root,
   auto const server_error = [&req, remaining](boost::beast::string_view what) {
     http::response<http::string_body> res{http::status::internal_server_error, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+    res.set(http::field::date, get_date_value());
     res.set(http::field::content_type, "text/html");
     set_connection_status_headers<http::string_body>(res, req.version(), remaining);
     res.body() = "An error occurred: '" + what.to_string() + "'";
@@ -170,6 +183,7 @@ void handle_request(boost::beast::string_view doc_root,
   if (req.method() == http::verb::head) {
     http::response<http::empty_body> res{http::status::ok, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+    res.set(http::field::date, get_date_value());
     res.set(http::field::content_type, mime_type(path));
     res.content_length(size);
     set_connection_status_headers<http::empty_body>(res, req.version(), remaining);
@@ -181,6 +195,7 @@ void handle_request(boost::beast::string_view doc_root,
       std::piecewise_construct, std::make_tuple(std::move(body)),
       std::make_tuple(http::status::ok, req.version())};
   res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+  res.set(http::field::date, get_date_value());
   res.set(http::field::content_type, mime_type(path));
   res.content_length(size);
   set_connection_status_headers<http::file_body>(res, req.version(), remaining);
@@ -287,7 +302,8 @@ public:
     boost::ignore_unused(bytes_transferred);
 
     // This means they closed the connection
-    if (ec == http::error::end_of_stream) return do_close();
+    if (ec == http::error::end_of_stream)
+      return do_close();
 
     boost::asio::detail::throw_error(ec, "read");
 
@@ -301,7 +317,7 @@ public:
 
     boost::asio::detail::throw_error(ec, "write");
 
-    if (close) {
+    if (close || req_.version() == 10 || remaining_ <= 0) {
       // This means we should close the connection, usually because
       // the response indicated the "Connection: close" semantic.
       return do_close();
