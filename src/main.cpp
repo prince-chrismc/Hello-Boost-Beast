@@ -16,9 +16,11 @@
 #include "server_certificate.hpp"
 
 #include <boost/asio/bind_executor.hpp>
+#include <boost/asio/placeholders.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast.hpp>
+#include <boost/bind.hpp>
 #include <memory>
 #include <string>
 
@@ -231,9 +233,10 @@ class https_connection : public std::enable_shared_from_this<https_connection> {
           self_.stream_, *sp,
           boost::asio::bind_executor(
               self_.strand_,
-              std::bind(&https_connection::on_write, self_.shared_from_this(),
-                        std::placeholders::_1, std::placeholders::_2,
-                        sp->need_eof())));
+              boost::bind(&https_connection::on_write, self_.shared_from_this(),
+                          boost::asio::placeholders::error,
+                          boost::asio::placeholders::bytes_transferred,
+                          sp->need_eof())));
     }
   };
 
@@ -293,8 +296,10 @@ public:
     http::async_read(
         stream_, buffer_, req_,
         boost::asio::bind_executor(
-            strand_, std::bind(&https_connection::on_read, shared_from_this(),
-                               std::placeholders::_1, std::placeholders::_2)));
+            strand_, boost::bind(&https_connection::on_read,
+                                 shared_from_this(),
+                                 boost::asio::placeholders::error,
+                                 boost::asio::placeholders::bytes_transferred)));
   }
 
   void on_read(boost::system::error_code ec, std::size_t bytes_transferred)
@@ -423,8 +428,7 @@ int main(int argc, char* argv[])
   // Check command line arguments.
   if (argc != 4) {
     std::cerr << "Usage: http-server-async-ssl <address> <port> <doc_root>\n"
-              << "Example:\n    "
-              << argv[0] << " 0.0.0.0 8443 . \n";
+              << "Example:\n    " << argv[0] << " 0.0.0.0 8443 . \n";
     return EXIT_FAILURE;
   }
 
