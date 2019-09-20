@@ -1,4 +1,4 @@
-!#/bin/sh
+#!/bin/sh
 
 # Basic HTTP/1.0 response indicated connection closed
 [ $(curl -k --http1.0 -i -s https://localhost:8443/README.md https://localhost:8443/LICENSE | grep -o "Connection: closed" | wc -l) -eq 2 ] || (echo false && exit 1)
