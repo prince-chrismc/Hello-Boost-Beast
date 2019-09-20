@@ -3,7 +3,8 @@ if [ ! -d "$1" ]; then
    echo "usage: $0 <PATH>"
 fi
 
-VCPKG_REPO_EXISTS=$(cd ~/vcpkg && git fetch)
+$(cd ~/vcpkg && git fetch)
+VCPKG_REPO_EXISTS=$?
 
 if [ $VCPKG_REPO_EXISTS ]; then
    git pull --rebase
