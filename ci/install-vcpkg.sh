@@ -3,7 +3,7 @@ if [ ! -d "$1" ]; then
    echo "usage: $0 <PATH>"
 fi
 
-(cd ~/vcpkg && git pull) || (
+(cd ~/vcpkg && git fetch && git pull) || (
    cd ~/ &&
    git clone https://github.com/Microsoft/vcpkg.git &&
    cd vcpkg &&
