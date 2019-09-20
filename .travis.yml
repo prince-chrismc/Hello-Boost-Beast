@@ -11,28 +11,35 @@ matrix:
       addons:
         apt:
           sources:
-          - ubuntu-toolchain-r-test
+            - ubuntu-toolchain-r-test
           packages:
-          - g++-4.8
+            - g++-4.8
+            - curl
+            - wget
       env:
-      - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
+        - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
 
 before_install:
-- WORK_DIR="$(pwd)"
+  - WORK_DIR="$(pwd)"
 
 install:
-- ./ci/install-vcpkg.sh "${WORK_DIR}"
-- ~/vcpkg/vcpkg install beast:x64-linux openssl:x64-linux
+  - ./ci/install-vcpkg.sh "${WORK_DIR}"
+  - ~/vcpkg/vcpkg install beast:x64-linux openssl:x64-linux
 
 before_script:
-- eval "${MATRIX_EVAL}"
+  - eval "${MATRIX_EVAL}"
 
 script:
-- cd "${WORK_DIR}"
-- mkdir build-travis
-- cd build-travis
-- cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
-- make
+  - cd "${WORK_DIR}"
+  - mkdir build-travis
+  - cd build-travis
+  - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+  - make
+  - sudo restful 127.0.0.1 8443 .. &
+  - jobs
+  - curl -k --http1.1 -i https://localhost:8443/README.md https://localhost:8443/LICENSE
+  - wget --no-check-certificate -q -w 65 -S -O - https://localhost:8443/README.md https://localhost:8443/LICENSE
+  - kill %1
 
 notifications:
   slack:
