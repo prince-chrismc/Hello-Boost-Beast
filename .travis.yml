@@ -35,10 +35,9 @@ script:
   - cd build-travis
   - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
   - make
-  - sudo restful 127.0.0.1 8443 .. &
+  - ./restful 127.0.0.1 8443 .. &
   - jobs
-  - curl -k --http1.1 -i https://localhost:8443/README.md https://localhost:8443/LICENSE
-  - wget --no-check-certificate -q -w 65 -S -O - https://localhost:8443/README.md https://localhost:8443/LICENSE
+  - ./ci/test-server.sh
   - kill %1
 
 notifications:
