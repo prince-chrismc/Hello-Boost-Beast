@@ -3,15 +3,15 @@ if [ ! -d "$1" ]; then
    echo "usage: $0 <PATH>"
 fi
 
-VCPKG_REPO_EXISTS=[ (cd ~/vcpkg && git fetch) ]
+VCPKG_REPO_EXISTS=$(cd ~/vcpkg && git fetch)
 
-if [ VCPKG_REPO_EXISTS ]; then
+if [ $VCPKG_REPO_EXISTS ]; then
    git pull --rebase
    vcpkg upgrade --no-dry-run
 else
-   cd ~/
+   cd ~/ || exit 1
    git clone https://github.com/Microsoft/vcpkg.git
-   cd vcpkg
+   cd vcpkg || exit 1
    ./bootstrap-vcpkg.sh
    sudo ./vcpkg integrate install
    git apply -v --ignore-whitespace "$1"/vcpkg.patch
