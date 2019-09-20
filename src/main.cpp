@@ -307,7 +307,7 @@ public:
     boost::ignore_unused(bytes_transferred);
 
     // This means they closed the connection
-    if (ec == http::error::end_of_stream)
+    if (ec == http::error::end_of_stream || ec == boost::asio::ssl::error::stream_truncated)
       return do_close();
 
     boost::asio::detail::throw_error(ec, "read");
@@ -364,7 +364,8 @@ public:
 
   void on_shutdown(boost::system::error_code ec)
   {
-    if (ec != boost::asio::error::eof)  // if remote has not already close underlying socket. https://stackoverflow.com/a/25703699/8480874
+    if (ec != boost::asio::error::eof &&                  // if remote has not already close underlying socket. https://stackoverflow.com/a/25703699/8480874
+        ec != boost::asio::ssl::error::stream_truncated)  // client closed socket without doing ssl shutdown https://github.com/boostorg/beast/issues/38
       boost::asio::detail::throw_error(ec, "shutdown");
 
     deadline_.cancel();
