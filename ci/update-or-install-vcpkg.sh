@@ -8,7 +8,7 @@ VCPKG_REPO_EXISTS=$?
 
 if [ $VCPKG_REPO_EXISTS ]; then
    git pull --rebase
-   vcpkg upgrade --no-dry-run
+   ./vcpkg upgrade --no-dry-run
 else
    cd ~/ || exit 1
    git clone https://github.com/Microsoft/vcpkg.git
