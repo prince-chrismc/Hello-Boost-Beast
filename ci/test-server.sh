@@ -5,7 +5,7 @@
 alias curl-insecure="curl -k -i -s"
 alias wget-insecure="wget --no-check-certificate -q --save-headers -O -"
 
-BASE_HREF="https://localhost:8443"
+BASE_HREF="https://https.testserver.lan:8443"
 README_HREF="${BASE_HREF}/README.md"
 LICENSE_HREF="${BASE_HREF}/LICENSE"
 
