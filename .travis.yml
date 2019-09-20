@@ -36,8 +36,7 @@ script:
   - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
   - make
   - ./restful 127.0.0.1 8443 .. &
-  - jobs
-  - ./ci/test-server.sh
+  - ./../ci/test-server.sh
   - kill %1
 
 notifications:
