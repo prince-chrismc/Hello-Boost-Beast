@@ -25,8 +25,6 @@ before_install:
 
 install:
   - ./ci/update-or-install-vcpkg.sh "${WORK_DIR}"
-  - export VCPKG_CXX_FLAGS="-std=c++11 -D _GLIBCXX_USE_CXX11_ABI=0"
-  - ~/vcpkg/vcpkg install beast:x64-linux openssl:x64-linux
 
 before_script:
   - eval "${MATRIX_EVAL}"
