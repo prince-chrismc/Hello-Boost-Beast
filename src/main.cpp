@@ -296,10 +296,11 @@ public:
     http::async_read(
         stream_, buffer_, req_,
         boost::asio::bind_executor(
-            strand_, boost::bind(&https_connection::on_read,
-                                 shared_from_this(),
-                                 boost::asio::placeholders::error,
-                                 boost::asio::placeholders::bytes_transferred)));
+            strand_,
+            boost::bind(&https_connection::on_read,
+                        shared_from_this(),
+                        boost::asio::placeholders::error,
+                        boost::asio::placeholders::bytes_transferred)));
   }
 
   void on_read(boost::system::error_code ec, std::size_t bytes_transferred)
@@ -307,13 +308,13 @@ public:
     boost::ignore_unused(bytes_transferred);
 
     // This means they closed the connection
-    if (ec == http::error::end_of_stream || ec == boost::asio::ssl::error::stream_truncated)
+    if (ec == http::error::end_of_stream ||
+        ec == boost::asio::ssl::error::stream_truncated)
       return do_close();
 
     boost::asio::detail::throw_error(ec, "read");
 
-    // Send the response
-    handle_request(*doc_root_, std::move(req_), --remaining_, lambda_);
+    handle_request(*doc_root_, std::move(req_), --remaining_, lambda_);  // Process request and send the response
   }
 
   void on_write(boost::system::error_code ec, std::size_t bytes_transferred, bool close)
@@ -322,11 +323,10 @@ public:
 
     boost::asio::detail::throw_error(ec, "write");
 
-    if (close || req_.version() == 10 || remaining_ <= 0) {
+    if (close || req_.version() == 10 || remaining_ <= 0)
       // This means we should close the connection, usually because
       // the response indicated the "Connection: close" semantic.
       return do_close();
-    }
 
     // We're done with the response so delete it
     res_ = nullptr;
@@ -344,22 +344,19 @@ public:
 
     deadline_.async_wait(
         [self](boost::beast::error_code ec) {
-          if (ec == boost::asio::error::operation_aborted) {
+          if (ec == boost::asio::error::operation_aborted)
             self->check_deadline();
-          }
-          else if (!ec) {
-            // Close socket to cancel any outstanding operation.
-            self->do_close();
-          }
+          else if (!ec)
+            self->do_close();  // Close socket to cancel any outstanding operation.
         });
   }
 
   void do_close()
   {
-    // Perform the SSL shutdown
     if (!stream_.lowest_layer().is_open())
       return;
 
+    // Perform the SSL shutdown
     auto self = shared_from_this();
     stream_.async_shutdown(boost::asio::bind_executor(
         strand_, [self](boost::system::error_code ec) { self->on_shutdown(ec); }));
@@ -373,7 +370,8 @@ public:
 
     deadline_.cancel();
     stream_.lowest_layer().close();
-    // At this point the connection is closed gracefully
+
+    // At this point the connection has closed gracefully
   }
 };
 
