@@ -275,8 +275,8 @@ public:
         boost::asio::bind_executor(
             strand_,
             [self](boost::system::error_code ec) {
-              boost::asio::detail::throw_error(ec, "handshake");
-              self->on_handshake(ec);
+              if (!ec)
+                self->on_handshake(ec);
             }));
   }
 
