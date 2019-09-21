@@ -7,8 +7,8 @@ $(cd ~/vcpkg && git fetch)
 VCPKG_REPO_EXISTS=$?
 
 if [ $VCPKG_REPO_EXISTS ]; then
+   cd ~/vcpkg || exit 1
    git pull --rebase
-   ls -la
    ./vcpkg upgrade --no-dry-run
 else
    cd ~/ || exit 1
