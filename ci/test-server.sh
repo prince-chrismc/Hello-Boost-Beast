@@ -10,8 +10,12 @@ README_HREF="${BASE_HREF}/README.md"
 LICENSE_HREF="${BASE_HREF}/LICENSE"
 
 # HTTP does not answer
+curl --http1.1 http://https.testserver.lan:8443
+[ $? -eq 0 ] || (echo "Failed: HTTP" && exit 1)
 
 # HTTPS reports correct hostname
+[ $(wget --no-check-certificate --output-file=- "${BASE_HREF}" | grep "CN=https.testserver.lan" |
+   wc -l) -eq 1 ] || (echo "Failed: Certificate Hostname" && exit 1)
 
 # HTTPS does not answer from incorrect name
 
