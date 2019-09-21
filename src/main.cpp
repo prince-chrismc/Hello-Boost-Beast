@@ -357,6 +357,9 @@ public:
   void do_close()
   {
     // Perform the SSL shutdown
+    if (!stream_.lowest_layer().is_open())
+      return;
+
     auto self = shared_from_this();
     stream_.async_shutdown(boost::asio::bind_executor(
         strand_, [self](boost::system::error_code ec) { self->on_shutdown(ec); }));
