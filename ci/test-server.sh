@@ -10,7 +10,7 @@ README_HREF="${BASE_HREF}/README.md"
 LICENSE_HREF="${BASE_HREF}/LICENSE"
 
 # HTTP does not answer
-curl --http1.1 http://https.testserver.lan:8443
+curl --http1.1 http://https.testserver.lan:8443 # I expect a "curl: (52) Empty reply from server"
 [ $? -eq 0 ] || (echo "Failed: HTTP" && exit 1)
 
 # HTTPS reports correct hostname
