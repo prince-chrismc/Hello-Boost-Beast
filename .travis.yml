@@ -24,8 +24,7 @@ before_install:
   - WORK_DIR="$(pwd)"
 
 install:
-  - ./ci/install-vcpkg.sh "${WORK_DIR}"
-  - ~/vcpkg/vcpkg install beast:x64-linux openssl:x64-linux
+  - ./ci/update-or-install-vcpkg.sh "${WORK_DIR}"
 
 before_script:
   - eval "${MATRIX_EVAL}"
