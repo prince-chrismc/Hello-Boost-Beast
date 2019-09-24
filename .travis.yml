@@ -1,5 +1,8 @@
 language: cpp
 
+services:
+  - docker
+
 cache:
   directories:
     - /home/travis/vcpkg
@@ -8,8 +11,8 @@ matrix:
   include:
     - os: linux
       dist: bionic
-      addons:
-        hosts: https.testserver.lan
+      # addons:
+      #   hosts: https.testserver.lan
         apt:
           sources:
             - ubuntu-toolchain-r-test
@@ -35,9 +38,14 @@ script:
   - cd build-travis
   - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
   - make
-  - ./restful 127.0.0.1 8443 .. &
+  - docker run -d -p="8443:8443" \
+    -v="/home/cmcarthur/Documents/Programming/Hello-Boost-Beast:/home/restful" \
+    --entrypoint="/home/restful/build-travis/restful" --cmd="0.0.0.0 8443 /home/restful/" \
+    --hostname="https.testserver.lan" centos:7
+  #- ./restful 127.0.0.1 8443 .. &
   - ./../ci/test-server.sh
-  - kill %1
+  # - kill %1
+  - docker kill $(docker ps -q)
 
 notifications:
   slack:
