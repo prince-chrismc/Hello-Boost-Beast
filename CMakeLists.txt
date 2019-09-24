@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.8)
 
 project(Hello-Boost-Beast)
 
@@ -12,10 +12,16 @@ find_package(OpenSSL REQUIRED)
 
 add_executable(restful src/main.cpp)
 
-set_target_properties(restful PROPERTIES
-    CXX_STANDARD 11
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS OFF
-)
+set_target_properties(restful
+                      PROPERTIES CXX_STANDARD
+                                 11
+                                 CXX_STANDARD_REQUIRED
+                                 YES
+                                 CXX_EXTENSIONS
+                                 OFF)
 
-target_link_libraries(restful PRIVATE Boost::system Boost::thread OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(restful
+                      PRIVATE Boost::system
+                              Boost::thread
+                              OpenSSL::SSL
+                              OpenSSL::Crypto)
