@@ -5,14 +5,13 @@ services:
 
 cache:
   directories:
-    - /home/travis/vcpkg
+    - "/home/travis/vcpkg"
 
 matrix:
   include:
     - os: linux
       dist: bionic
-      # addons:
-      #   hosts: https.testserver.lan
+      addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
@@ -38,16 +37,13 @@ script:
   - cd build-travis
   - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
   - make
-  - docker run -d -p="8443:8443" \
-    -v="/home/cmcarthur/Documents/Programming/Hello-Boost-Beast:/home/restful" \
-    --entrypoint="/home/restful/build-travis/restful" --cmd="0.0.0.0 8443 /home/restful/" \
-    --hostname="https.testserver.lan" centos:7
-  #- ./restful 127.0.0.1 8443 .. &
-  - ./../ci/test-server.sh
-  # - kill %1
+  - docker run -d -p="8443:8443" \ -v="/home/cmcarthur/Documents/Programming/Hello-Boost-Beast:/home/restful"
+    \ --entrypoint="/home/restful/build-travis/restful" --cmd="0.0.0.0 8443 /home/restful/"
+    \ --hostname="https.testserver.lan" centos:7
+  - "./../ci/test-server.sh"
   - docker kill $(docker ps -q)
 
 notifications:
   slack:
-    secure: MSZB2wEMSbXrFUu6OmlD38MZmHDO5eW33SLBGU45QL123wfy2jEA5ZbGNoTyv8u+nBmP/dSjlEjXQ6QrCsBlSFpsdwzSwuEVn5Naq3f4uNmD1N0cZu8MDaU0UIuRz58ODJfUcMG/422QbjUEhRjCBlX7XMNGgb89y+XQfvcxqi/vwu3NSWz7hZFTswR70453S38HvznoCQiZfZm1s4OJ7zpsBzhLqI8Qe7MjvSAOlQ9e3Td6G69qSMby0NoQlFJzW3J7OAiIU0+HJ7CQdZg7Qczcj5L/NqQ6lXsgXXt8OB+A8yUa4UuBOgg5X7/ILVUhBgEVlavvG8NW8IocHWZ2+Dg6taC2LYHI70KQybRWB2X10VJ/d5n0svLWfcCTllQ9irrVnE+i49xzooarajsO3MPXuE0nGXsfgTsPwtT6OxYd68jLPIlsBM0SDQQPZa6H8LBIOKHZMNPwjDIE3jJ/40e4j/pU13juH267O2tgGAyRQFAeq54INUKUvlJUNxzRRt8KLMcnm2ctUlrNvBkkzgX86TlVU7W+EttRKEnbA2OgUCzvIaIe1hEIFzNjged5Gxi6zgivSIAz2QwEP9n0jswMokaI5DAX+Doe6JZPSXQ/CnAzu+LkdS6NYq8PUA+QgBKG87W1XILvy5EqhZtvbMahBhvchYpXCPf7FZtAFCE=
+    secure: DyC2E6wBNP+xgiXaU5shidrZTPNCZw1v6w1ga9esORojZsgPmvC1D1CRn26DsgOlHhHgcc42YWXpdjVJLQ2HdZ9eVEraaR5Hap0x4AHJv3sDMf6yy5Jrmd62hOnpy6lMq15ntdEMqF3SJGZxAVa5wSRCnExvH95a9ATGlCawPuoNuZ5WQuE25bmZJagkWsQXbjtBOm5VEn5J06IhTsrCkb3/hCL+zAQVTM+KFnScfq8VZ+ZtRdY9nQ+lqMaG/k0cFvtPHHfUNqETuT4A8Ub5bHnVCmzBYZTPCwCTt7srirx+GvdmeRxZkv58wAhxm0N2E9MCq6Rxf+avFFXMZEZG0mjpa6MXkGfwWSlGx5Ms+KM5b3QgpfXgPzdLKXrrOGum0v7KVKlVUMipVW3vCDNTHBC1yfIn8X9etF7pCgMUURKEesFj0VzJ9oJcdVnP/+KjzTOSemk7UMoRbZgbpgCCf82Oy1ys5krXv9sDYKG1F2RhBQnblpUcG+GNzbzoKBuCE0BiERyHI4NRz1yH1kRWuNjRqhie7IjHMKBKl5n6nm8wBXyPx/3FtzhqopV7HQFV/tgad7sgRatscZnVZBI0NmmsRGxU7CPDucd4MJB9ARSuyJvZOrTVwR0FKxc0EdOffwrmL2mqTJjwV6HscaTxgjZpEZwerJNVFkZPrObiFHo=
   email: false
