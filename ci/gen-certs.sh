@@ -60,3 +60,26 @@ chmod 444 ca/intermediate/certs/intermediate.cert.pem
 
 cp ca/certs/ca.cert.pem ca/intermediate/certs/ca-chain.cert.pem
 chmod 444 ca/intermediate/certs/ca-chain.cert.pem
+
+# Create ECDSA key
+FQDN="https.testserver.lan"
+echo "Generating ecdsa.$FQDN.key.pem"
+openssl ecparam -name prime256v1 -genkey -noout -out ca/intermediate/private/ecdsa.$FQDN.key.pem
+chmod 400 ca/intermediate/private/ecdsa.$FQDN.key.pem
+
+openssl req -config intermediate-openssl.cnf \
+   -key ca/intermediate/private/ecdsa.$FQDN.key.pem \
+   -new -sha256 -out ca/intermediate/csr/ecdsa.$FQDN.csr.pem \
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$FQDN"
+
+# Sign ECDSA CSR
+openssl ca -batch -config intermediate-openssl.cnf -extensions server_cert \
+   -days 18250 -notext -md sha256 -in ca/intermediate/csr/ecdsa.$FQDN.csr.pem \
+   -out ca/intermediate/certs/ecdsa.$FQDN.cert.pem
+cat ca/intermediate/certs/ecdsa.$FQDN.cert.pem \
+   ca/intermediate/certs/ca-chain.cert.pem \
+   >ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
+# openssl pkcs12 -passout pass: -export \
+#    -out ca/intermediate/certs/ecdsa.$FQDN.cert.pfx \
+#    -inkey ca/intermediate/private/ecdsa.$FQDN.key.pem \
+#    -in ca/intermediate/certs/ecdsa.$FQDN.cert.pem
