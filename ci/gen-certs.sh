@@ -6,10 +6,14 @@
 rm -rf ca/
 
 echo "$0: Starting in: $(pwd)"
-mkdir ca ca/certs ca/crl ca/newcerts ca/private
+mkdir ca ca/certs ca/newcerts ca/private
 chmod 700 ca/private
 touch ca/index.txt
 echo 1000 >ca/serial
+
+DOMAIN="testserver.lan"
+CA_FQDN="ca.$DOMAIN"
+INT_FQDN="i$CA_FQDN"
 
 # Create ECDSA key
 echo "Generating ca.key.pem"
@@ -21,7 +25,7 @@ openssl req -config openssl.cnf \
    -key ca/private/ca.key.pem \
    -new -x509 -days 18250 -sha256 -extensions v3_ca \
    -out ca/certs/ca.cert.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ca.testserver.lan"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$CA_FQDN"
 chmod 444 ca/certs/ca.cert.pem
 
 # openssl x509 -noout -text -in certs/ca.cert.pem # verification
@@ -42,14 +46,14 @@ echo "Generating intermediate.crs.pem"
 openssl req -config intermediate-openssl.cnf -new -sha256 \
    -key ca/intermediate/private/intermediate.key.pem \
    -out ca/intermediate/csr/intermediate.csr.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ca.testserver.lan"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$INT_FQDN"
 
 echo "Generating intermediate.cert.pem"
 openssl ca -config openssl.cnf -extensions v3_intermediate_ca \
    -days 18250 -notext -md sha256 \
    -in ca/intermediate/csr/intermediate.csr.pem \
    -out ca/intermediate/certs/intermediate.cert.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ca.testserver.lan"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$INT_FQDN"
 
 chmod 444 ca/intermediate/certs/intermediate.cert.pem
 
@@ -61,8 +65,23 @@ chmod 444 ca/intermediate/certs/intermediate.cert.pem
 cp ca/certs/ca.cert.pem ca/intermediate/certs/ca-chain.cert.pem
 chmod 444 ca/intermediate/certs/ca-chain.cert.pem
 
+# Create CRL
+openssl ca -config intermediate-openssl.cnf -gencrl \
+   -out ca/intermediate/crl/intermediate.crl.pem
+
+# Create OCSP pair
+openssl genrsa -out ca/intermediate/private/ocsp.$DOMAIN.key.pem 4096
+openssl req -config intermediate-openssl.cnf -new -sha256 \
+   -key ca/intermediate/private/ocsp.$DOMAIN.key.pem \
+   -out ca/intermediate/csr/ocsp.$DOMAIN.csr.pem \
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ocsp.$DOMAIN"
+openssl ca -batch -config intermediate-openssl.cnf -extensions ocsp \
+   -days 18250 -notext -md sha256 \
+   -in ca/intermediate/csr/ocsp.$DOMAIN.csr.pem \
+   -out ca/intermediate/certs/ocsp.$DOMAIN.cert.pem
+
 # Create ECDSA key
-FQDN="https.testserver.lan"
+FQDN="https.$DOMAIN"
 echo "Generating ecdsa.$FQDN.key.pem"
 openssl ecparam -name prime256v1 -genkey -noout -out ca/intermediate/private/ecdsa.$FQDN.key.pem
 chmod 400 ca/intermediate/private/ecdsa.$FQDN.key.pem
