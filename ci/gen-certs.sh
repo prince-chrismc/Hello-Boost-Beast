@@ -3,54 +3,60 @@
 # This script started life as a copy paste from https://jamielinux.com/docs/openssl-certificate-authority/index.html
 # The modifications are to the algorithm is ecdsa
 
-mkdir -p /root/ca
-cd /root/ca
-mkdir certs crl newcerts private
-chmod 700 private
-touch index.txt
-echo 1000 >serial
+rm -rf ca/
+
+echo "$0: Starting in: $(pwd)"
+mkdir ca ca/certs ca/crl ca/newcerts ca/private
+chmod 700 ca/private
+touch ca/index.txt
+echo 1000 >ca/serial
 
 # Create ECDSA key
-openssl ecparam -name secp256r1 -genkey -noout -out private/ca.key.pem
-chmod 400 private/ca.key.pem
+echo "Generating ca.key.pem"
+openssl ecparam -name prime256v1 -genkey -noout -out ca/private/ca.key.pem
+chmod 400 ca/private/ca.key.pem
 
+echo "Generating ca.cert.pem"
 openssl req -config openssl.cnf \
-   -key private/ca.key.pem \
+   -key ca/private/ca.key.pem \
    -new -x509 -days 7300 -sha256 -extensions v3_ca \
-   -out certs/ca.cert.pem
-chmod 444 certs/ca.cert.pem
+   -out ca/certs/ca.cert.pem \
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ca.testserver.lan"
+chmod 444 ca/certs/ca.cert.pem
 
-openssl x509 -noout -text -in certs/ca.cert.pem # verification
+# openssl x509 -noout -text -in certs/ca.cert.pem # verification
+mkdir ca/intermediate ca/intermediate/certs ca/intermediate/crl ca/intermediate/csr \
+   ca/intermediate/newcerts ca/intermediate/private
+chmod 700 ca/intermediate/private
+touch ca/intermediate/index.txt
+echo 1000 >ca/intermediate/serial
+echo 1000 >ca/intermediate/crlnumber
 
-mkdir /root/ca/intermediate
-cd /root/ca/intermediate
-mkdir certs crl csr newcerts private
-chmod 700 private
-touch index.txt
-echo 1000 >serial
-echo 1000 >/root/ca/intermediate/crlnumber
+echo "Generating intermediate.key.pem"
+openssl ecparam -name prime256v1 -genkey -noout \
+   -out ca/intermediate/private/intermediate.key.pem
 
-openssl ecparam -name secp256r1 -genkey -noout \
-   -out intermediate/private/intermediate.key.pem
+chmod 400 ca/intermediate/private/intermediate.key.pem
 
-chmod 400 intermediate/private/intermediate.key.pem
+echo "Generating intermediate.crs.pem"
+openssl req -config intermediate-openssl.cnf -new -sha256 \
+   -key ca/intermediate/private/intermediate.key.pem \
+   -out ca/intermediate/csr/intermediate.csr.pem \
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ca.testserver.lan"
 
-openssl req -config intermediate/openssl.cnf -new -sha256 \
-   -key intermediate/private/intermediate.key.pem \
-   -out intermediate/csr/intermediate.csr.pem
-
+echo "Generating intermediate.cert.pem"
 openssl ca -config openssl.cnf -extensions v3_intermediate_ca \
    -days 3650 -notext -md sha256 \
-   -in intermediate/csr/intermediate.csr.pem \
-   -out intermediate/certs/intermediate.cert.pem
+   -in ca/intermediate/csr/intermediate.csr.pem \
+   -out ca/intermediate/certs/intermediate.cert.pem \
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ca.testserver.lan"
 
-chmod 444 intermediate/certs/intermediate.cert.pem
+chmod 444 ca/intermediate/certs/intermediate.cert.pem
 
-openssl x509 -noout -text \
-   -in intermediate/certs/intermediate.cert.pem
+# openssl x509 -noout -text \
+#    -in ca/intermediate/certs/intermediate.cert.pem
 
-openssl verify -CAfile certs/ca.cert.pem \
-   intermediate/certs/intermediate.cert.pem
+# openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/intermediate.cert.pem
 
-certs/ca.cert.pem >intermediate/certs/ca-chain.cert.pem
-chmod 444 intermediate/certs/ca-chain.cert.pem
+cp ca/certs/ca.cert.pem ca/intermediate/certs/ca-chain.cert.pem
+chmod 444 ca/intermediate/certs/ca-chain.cert.pem
