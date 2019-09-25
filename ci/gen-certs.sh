@@ -19,7 +19,7 @@ chmod 400 ca/private/ca.key.pem
 echo "Generating ca.cert.pem"
 openssl req -config openssl.cnf \
    -key ca/private/ca.key.pem \
-   -new -x509 -days 7300 -sha256 -extensions v3_ca \
+   -new -x509 -days 18250 -sha256 -extensions v3_ca \
    -out ca/certs/ca.cert.pem \
    -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ca.testserver.lan"
 chmod 444 ca/certs/ca.cert.pem
@@ -46,7 +46,7 @@ openssl req -config intermediate-openssl.cnf -new -sha256 \
 
 echo "Generating intermediate.cert.pem"
 openssl ca -config openssl.cnf -extensions v3_intermediate_ca \
-   -days 3650 -notext -md sha256 \
+   -days 18250 -notext -md sha256 \
    -in ca/intermediate/csr/intermediate.csr.pem \
    -out ca/intermediate/certs/intermediate.cert.pem \
    -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ca.testserver.lan"
