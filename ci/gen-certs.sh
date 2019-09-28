@@ -65,6 +65,9 @@ chmod 444 ca/intermediate/certs/intermediate.cert.pem
 cp ca/certs/ca.cert.pem ca/intermediate/certs/ca-chain.cert.pem
 chmod 444 ca/intermediate/certs/ca-chain.cert.pem
 
+# Create DH parameters
+openssl dhparam -out ca/intermediate/private/dhparam.pem 4096
+
 # Create CRL
 openssl ca -config intermediate-openssl.cnf -gencrl \
    -out ca/intermediate/crl/intermediate.crl.pem
