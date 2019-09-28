@@ -24,8 +24,8 @@ else
    cd vcpkg || exit 1
    ./bootstrap-vcpkg.sh
    ./vcpkg integrate install
-   git apply -v --ignore-whitespace "$1"/vcpkg.patch
-   git commit -a -m "patching asio and beast version"
+   # git apply -v --ignore-whitespace "$1"/vcpkg.patch
+   # git commit -a -m "patching asio and beast version"
    export VCPKG_CXX_FLAGS="-std=c++11 -D _GLIBCXX_USE_CXX11_ABI=0"
    ./vcpkg install beast:x64-linux openssl:x64-linux
 fi
