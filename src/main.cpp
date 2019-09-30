@@ -276,7 +276,9 @@ public:
             strand_,
             [self](boost::system::error_code ec) {
               if (!ec)
-                self->on_handshake(ec);
+                return self->on_handshake(ec);
+              std::cerr << "handshake"
+                        << ": " << ec.message() << "\n";
             }));
   }
 
