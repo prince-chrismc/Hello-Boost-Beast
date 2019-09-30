@@ -8,7 +8,7 @@ include(${CMAKE_TOOLCHAIN_FILE})
 
 # .\vcpkg install boost:x64-windows-static openssl:x64-windows-static
 find_package(Boost 1.69 COMPONENTS system thread REQUIRED)
-find_package(OpenSSL 1.1 REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 add_executable(restful src/main.cpp)
 
