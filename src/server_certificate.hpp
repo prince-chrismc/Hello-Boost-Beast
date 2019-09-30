@@ -24,13 +24,13 @@ struct ec_key_cleanup
 void use_tmp_ecdh_file(boost::asio::ssl::context& ctx, 
         const std::string& certificate)
 {
-  asio::error_code ec;
+  boost::asio::error_code ec;
   use_tmp_ecdh_file(certificate, ec);
-  asio::detail::throw_error(ec, "use_tmp_ecdh_file");
+  boost::asio::detail::throw_error(ec, "use_tmp_ecdh_file");
 }
 
-ASIO_SYNC_OP_VOID use_tmp_ecdh_file(boost::asio::ssl::context& ctx,
-        asio::error_code& ec)
+void use_tmp_ecdh_file(boost::asio::ssl::context& ctx,
+        boost::asio::error_code& ec)
 {
   ::ERR_clear_error();
 
@@ -40,13 +40,13 @@ ASIO_SYNC_OP_VOID use_tmp_ecdh_file(boost::asio::ssl::context& ctx,
     return do_use_tmp_ecdh(bio.p,ec);
   }
 
-  ec = asio::error_code(
+  ec = boost::asio::error_code(
       static_cast<int>(::ERR_get_error()),
-      asio::error::get_ssl_category());
+      boost::asio::error::get_ssl_category());
   ASIO_SYNC_OP_VOID_RETURN(ec);
 }
 
-ASIO_SYNC_OP_VOID context::do_use_tmp_ecdh(
+void context::do_use_tmp_ecdh(
         boost::asio::ssl::context& ctx,
         BIO* bio, asio::error_code& ec)
 {
@@ -74,17 +74,16 @@ ASIO_SYNC_OP_VOID context::do_use_tmp_ecdh(
   {
     if (::SSL_CTX_set_tmp_ecdh(ctx.get_native_handle(), ec_key.p) == 1 )
     {
-      ec = asio::error_code();
+      ec = boost::asio::error_code();
       ASIO_SYNC_OP_VOID_RETURN(ec);
     }
   }
 
-  ec = asio::error_code(
+  ec = boost::asio::error_code(
       static_cast<int>(::ERR_get_error()),
-      asio::error::get_ssl_category());
+      boost::asio::error::get_ssl_category());
   ASIO_SYNC_OP_VOID_RETURN(ec);
 }
-
 
 // Load a signed certificate into the ssl context, and configure
 // the context for use with a server.
@@ -145,7 +144,7 @@ H512gn0CQpuIr2JV0DkQnezzrIjtSUFCDutuo+cFcpAeGTaGgYm+BTsCAQI=
       boost::asio::buffer(key.data(), key.size()),
       boost::asio::ssl::context::file_format::pem);
 
-  ctx.use_tmp_ecdh_file(
+  use_tmp_ecdh_file(ctx,
       boost::asio::buffer(dh.data(), dh.size()));
 }
 
