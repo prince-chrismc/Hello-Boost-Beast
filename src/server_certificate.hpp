@@ -11,78 +11,108 @@
 #define BOOST_BEAST_EXAMPLE_COMMON_SERVER_CERTIFICATE_HPP
 
 #include <boost/asio/buffer.hpp>
+#include <boost/asio/error.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <cstddef>
 #include <memory>
 
-struct ec_key_cleanup
+BIO* make_buffer_bio(const boost::asio::const_buffer& b)
 {
-  EC_KEY *p;
-  ~ec_key_cleanup() { if (p) ::EC_KEY_free(p); }
+  return ::BIO_new_mem_buf(
+      const_cast<void*>(b.data()),
+      static_cast<int>(b.size()));
+}
+
+struct bio_cleanup {
+  BIO* p;
+  ~bio_cleanup()
+  {
+    if (p) ::BIO_free(p);
+  }
 };
 
-void use_tmp_ecdh_file(boost::asio::ssl::context& ctx, 
-        const std::string& certificate)
-{
-  boost::asio::error_code ec;
-  use_tmp_ecdh_file(certificate, ec);
-  boost::asio::detail::throw_error(ec, "use_tmp_ecdh_file");
-}
-
-void use_tmp_ecdh_file(boost::asio::ssl::context& ctx,
-        boost::asio::error_code& ec)
-{
-  ::ERR_clear_error();
-
-  bio_cleanup bio = { ::BIO_new_file(certificate.c_str(), "r") };
-  if (bio.p)
+struct x509_cleanup {
+  X509* p;
+  ~x509_cleanup()
   {
-    return do_use_tmp_ecdh(bio.p,ec);
+    if (p) ::X509_free(p);
   }
+};
 
-  ec = boost::asio::error_code(
-      static_cast<int>(::ERR_get_error()),
-      boost::asio::error::get_ssl_category());
-  ASIO_SYNC_OP_VOID_RETURN(ec);
-}
+struct evp_pkey_cleanup {
+  EVP_PKEY* p;
+  ~evp_pkey_cleanup()
+  {
+    if (p) ::EVP_PKEY_free(p);
+  }
+};
 
-void context::do_use_tmp_ecdh(
-        boost::asio::ssl::context& ctx,
-        BIO* bio, asio::error_code& ec)
+struct ec_key_cleanup {
+  EC_KEY* p;
+  ~ec_key_cleanup()
+  {
+    if (p) ::EC_KEY_free(p);
+  }
+};
+
+BOOST_ASIO_SYNC_OP_VOID do_use_tmp_ecdh(
+    boost::asio::ssl::context& ctx,
+    BIO* bio,
+    boost::system::error_code& ec)
 {
   ::ERR_clear_error();
 
   int nid = NID_undef;
 
-  x509_cleanup x509 = { ::PEM_read_bio_X509(bio, NULL, 0, NULL) };
-  if (x509.p)
-  {
-    evp_pkey_cleanup pkey = { ::X509_get_pubkey(x509.p) };
-    if(pkey.p)
-    {
-      ec_key_cleanup tmp = { ::EVP_PKEY_get1_EC_KEY(pkey.p) };
-      if(tmp.p)
-      {
-        const EC_GROUP *group = EC_KEY_get0_group(tmp.p);
+  x509_cleanup x509 = {::PEM_read_bio_X509(bio, NULL, 0, NULL)};
+  if (x509.p) {
+    evp_pkey_cleanup pkey = {::X509_get_pubkey(x509.p)};
+    if (pkey.p) {
+      ec_key_cleanup tmp = {::EVP_PKEY_get1_EC_KEY(pkey.p)};
+      if (tmp.p) {
+        const EC_GROUP* group = EC_KEY_get0_group(tmp.p);
         nid = EC_GROUP_get_curve_name(group);
       }
     }
   }
 
-  ec_key_cleanup ec_key = { ::EC_KEY_new_by_curve_name(nid) };
-  if(ec_key.p)
-  {
-    if (::SSL_CTX_set_tmp_ecdh(ctx.get_native_handle(), ec_key.p) == 1 )
-    {
-      ec = boost::asio::error_code();
-      ASIO_SYNC_OP_VOID_RETURN(ec);
+  ec_key_cleanup ec_key = {::EC_KEY_new_by_curve_name(nid)};
+  if (ec_key.p) {
+    if (::SSL_CTX_set_tmp_ecdh(ctx.native_handle(), ec_key.p) == 1) {
+      ec = boost::system::error_code();
+      BOOST_ASIO_SYNC_OP_VOID_RETURN(ec);
     }
   }
 
-  ec = boost::asio::error_code(
+  ec = boost::system::error_code(
       static_cast<int>(::ERR_get_error()),
       boost::asio::error::get_ssl_category());
-  ASIO_SYNC_OP_VOID_RETURN(ec);
+  BOOST_ASIO_SYNC_OP_VOID_RETURN(ec);
+}
+
+BOOST_ASIO_SYNC_OP_VOID use_tmp_ecdh_file(boost::asio::ssl::context& ctx,
+                                          const boost::asio::const_buffer& certificate,
+                                          boost::system::error_code& ec)
+{
+  ::ERR_clear_error();
+
+  bio_cleanup bio = {make_buffer_bio(certificate)};
+  if (bio.p) {
+    return do_use_tmp_ecdh(ctx, bio.p, ec);
+  }
+
+  ec = boost::system::error_code(
+      static_cast<int>(::ERR_get_error()),
+      boost::asio::error::get_ssl_category());
+  BOOST_ASIO_SYNC_OP_VOID_RETURN(ec);
+}
+
+void set_tmp_ecdh_file(boost::asio::ssl::context& ctx,
+                       const boost::asio::const_buffer& certificate)
+{
+  boost::system::error_code ec;
+  use_tmp_ecdh_file(ctx, certificate, ec);
+  boost::asio::detail::throw_error(ec, "use_tmp_ecdh_file");
 }
 
 // Load a signed certificate into the ssl context, and configure
@@ -144,8 +174,7 @@ H512gn0CQpuIr2JV0DkQnezzrIjtSUFCDutuo+cFcpAeGTaGgYm+BTsCAQI=
       boost::asio::buffer(key.data(), key.size()),
       boost::asio::ssl::context::file_format::pem);
 
-  use_tmp_ecdh_file(ctx,
-      boost::asio::buffer(dh.data(), dh.size()));
+  set_tmp_ecdh_file(ctx, boost::asio::buffer(dh.data(), dh.size()));
 }
 
 #endif
