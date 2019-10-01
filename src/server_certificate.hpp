@@ -107,12 +107,12 @@ BOOST_ASIO_SYNC_OP_VOID use_tmp_ecdh_file(boost::asio::ssl::context& ctx,
   BOOST_ASIO_SYNC_OP_VOID_RETURN(ec);
 }
 
-void set_tmp_ecdh_file(boost::asio::ssl::context& ctx,
-                       const boost::asio::const_buffer& certificate)
+void use_tmp_ecdh(boost::asio::ssl::context& ctx,
+                  const boost::asio::const_buffer& certificate)
 {
   boost::system::error_code ec;
   use_tmp_ecdh_file(ctx, certificate, ec);
-  boost::asio::detail::throw_error(ec, "use_tmp_ecdh_file");
+  boost::asio::detail::throw_error(ec, "use_tmp_ecdh");
 }
 
 // Load a signed certificate into the ssl context, and configure
@@ -174,7 +174,7 @@ H512gn0CQpuIr2JV0DkQnezzrIjtSUFCDutuo+cFcpAeGTaGgYm+BTsCAQI=
       boost::asio::buffer(key.data(), key.size()),
       boost::asio::ssl::context::file_format::pem);
 
-  set_tmp_ecdh_file(ctx, boost::asio::buffer(dh.data(), dh.size()));
+  use_tmp_ecdh(ctx, boost::asio::buffer(dh.data(), dh.size()));
 }
 
 #endif
