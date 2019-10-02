@@ -136,6 +136,20 @@ MA4GA1UdDwEB/wQEAwIFoDATBgNVHSUEDDAKBggrBgEFBQcDATAKBggqhkjOPQQD
 AgNIADBFAiEArpZoyIen4R4iOxpIvwA5402nY4Krk0pYxPoyAwQBG7cCIBYiOUWe
 cL9uQjCUnJQS/1+UV+inqZz7367yWSCKMdVo
 -----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIICDDCCAbOgAwIBAgIUJNye5eWw6uLiYGKx0YPmuAOxwZQwCgYIKoZIzj0EAwIw
+UzELMAkGA1UEBhMCQ0ExDzANBgNVBAgMBlF1ZWJlYzEXMBUGA1UECgwOcHJpbmNl
+LWNocmlzbWMxGjAYBgNVBAMMEWNhLnRlc3RzZXJ2ZXIubGFuMCAXDTE5MDkyNjAw
+MzIyN1oYDzIwNjkwOTEzMDAzMjI3WjBTMQswCQYDVQQGEwJDQTEPMA0GA1UECAwG
+UXVlYmVjMRcwFQYDVQQKDA5wcmluY2UtY2hyaXNtYzEaMBgGA1UEAwwRY2EudGVz
+dHNlcnZlci5sYW4wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARwAmznU2yoTKW3
+XIbfoPHZAoervdCmOo9rP+uuQFK4aTfGL9YbdxBEmT7CZLFeCAhQfzh9jdVsz/qL
+WMF6n3Rzo2MwYTAdBgNVHQ4EFgQUszKCfzlSl54nDpRdS1DGnOcAIRAwHwYDVR0j
+BBgwFoAUszKCfzlSl54nDpRdS1DGnOcAIRAwDwYDVR0TAQH/BAUwAwEB/zAOBgNV
+HQ8BAf8EBAMCAYYwCgYIKoZIzj0EAwIDRwAwRAIgP2nFxq3xx6j21FJS/fgCjKUs
+vD/s8xa95p+ZrN/Zu6ECID1hk+lh4sHtTr+LQunwc43a0l4EF05XvHK8/DwsP660
+-----END CERTIFICATE-----
+
 )###";
 
   const std::string key = R"###(-----BEGIN EC PRIVATE KEY-----
@@ -170,11 +184,13 @@ H512gn0CQpuIr2JV0DkQnezzrIjtSUFCDutuo+cFcpAeGTaGgYm+BTsCAQI=
   ctx.use_certificate_chain(
       boost::asio::buffer(cert.data(), cert.size()));
 
+  use_tmp_ecdh(ctx, boost::asio::buffer(cert.data(), cert.size()));
+
   ctx.use_private_key(
       boost::asio::buffer(key.data(), key.size()),
       boost::asio::ssl::context::file_format::pem);
 
-  use_tmp_ecdh(ctx, boost::asio::buffer(dh.data(), dh.size()));
+  ctx.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
 }
 
 #endif
