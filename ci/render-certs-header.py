@@ -1,6 +1,6 @@
 import fileinput
 
-SERVER_CERT = "./ca/intermediate/certs/ecdsa.https.testserver.lan.cert.cahin.pem"
+SERVER_CERT = "./ca/intermediate/certs/ecdsa.https.testserver.lan.cert.chain.pem"
 SERVER_KEY = "./ca/intermediate/private/ecdsa.https.testserver.lan.key.pem"
 DH_PARAM = "./ca/intermediate/private/dhparam.pem"
 
