@@ -49,7 +49,7 @@ openssl req -config intermediate-openssl.cnf -new -sha256 \
    -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$INT_FQDN"
 
 echo "Generating intermediate.cert.pem"
-openssl ca -config openssl.cnf -extensions v3_intermediate_ca \
+openssl ca -batch -config openssl.cnf -extensions v3_intermediate_ca \
    -days 18250 -notext -md sha256 \
    -in ca/intermediate/csr/intermediate.csr.pem \
    -out ca/intermediate/certs/intermediate.cert.pem \
@@ -69,7 +69,7 @@ chmod 444 ca/intermediate/certs/ca-chain.cert.pem
 openssl dhparam -out ca/intermediate/private/dhparam.pem 4096
 
 # Create CRL
-openssl ca -config intermediate-openssl.cnf -gencrl \
+openssl ca -batch -config intermediate-openssl.cnf -gencrl \
    -out ca/intermediate/crl/intermediate.crl.pem
 
 # Create OCSP pair
@@ -95,7 +95,7 @@ openssl req -config intermediate-openssl.cnf \
    -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$FQDN"
 
 # Sign ECDSA CSR
-openssl ca -batch -config intermediate-openssl.cnf -extensions server_cert \
+openssl ca -batch -batch -config intermediate-openssl.cnf -extensions server_cert \
    -days 18250 -notext -md sha256 -in ca/intermediate/csr/ecdsa.$FQDN.csr.pem \
    -out ca/intermediate/certs/ecdsa.$FQDN.cert.pem
 cat ca/intermediate/certs/ecdsa.$FQDN.cert.pem \
