@@ -10,7 +10,7 @@ include(${CMAKE_TOOLCHAIN_FILE})
 find_package(Boost 1.69 COMPONENTS system thread REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-add_executable(restful src/main.cpp)
+add_executable(restful src/main.cpp src/server_certificate.hpp)
 
 set_target_properties(restful
                       PROPERTIES CXX_STANDARD
