@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# This script started life as a copy paste from https://jamielinux.com/docs/openssl-certificate-authority/index.html
+# This script started life as a copy paste from
+# https://jamielinux.com/docs/openssl-certificate-authority/index.html
 # The modifications are to the algorithm is ecdsa
 
 rm -rf ca/
@@ -25,7 +26,7 @@ openssl req -config openssl.cnf \
    -key ca/private/ca.key.pem \
    -new -x509 -days 18250 -sha256 -extensions v3_ca \
    -out ca/certs/ca.cert.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$CA_FQDN"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=$CA_FQDN"
 chmod 444 ca/certs/ca.cert.pem
 
 # openssl x509 -noout -text -in certs/ca.cert.pem # verification
@@ -46,14 +47,14 @@ echo "Generating intermediate.crs.pem"
 openssl req -config intermediate-openssl.cnf -new -sha256 \
    -key ca/intermediate/private/intermediate.key.pem \
    -out ca/intermediate/csr/intermediate.csr.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$INT_FQDN"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=$INT_FQDN"
 
 echo "Generating intermediate.cert.pem"
 openssl ca -batch -config openssl.cnf -extensions v3_intermediate_ca \
    -days 18250 -notext -md sha256 \
    -in ca/intermediate/csr/intermediate.csr.pem \
    -out ca/intermediate/certs/intermediate.cert.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$INT_FQDN"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=$INT_FQDN"
 
 chmod 444 ca/intermediate/certs/intermediate.cert.pem
 
@@ -77,7 +78,7 @@ openssl genrsa -out ca/intermediate/private/ocsp.$DOMAIN.key.pem 4096
 openssl req -config intermediate-openssl.cnf -new -sha256 \
    -key ca/intermediate/private/ocsp.$DOMAIN.key.pem \
    -out ca/intermediate/csr/ocsp.$DOMAIN.csr.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=ocsp.$DOMAIN"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=ocsp.$DOMAIN"
 openssl ca -batch -config intermediate-openssl.cnf -extensions ocsp \
    -days 18250 -notext -md sha256 \
    -in ca/intermediate/csr/ocsp.$DOMAIN.csr.pem \
@@ -92,7 +93,7 @@ chmod 400 ca/intermediate/private/ecdsa.$FQDN.key.pem
 openssl req -config intermediate-openssl.cnf \
    -key ca/intermediate/private/ecdsa.$FQDN.key.pem \
    -new -sha256 -out ca/intermediate/csr/ecdsa.$FQDN.csr.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/CN=$FQDN"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=$FQDN"
 
 # Sign ECDSA CSR
 openssl ca -batch -batch -config intermediate-openssl.cnf -extensions server_cert \
