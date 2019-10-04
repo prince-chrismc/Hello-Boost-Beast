@@ -14,6 +14,7 @@
 //------------------------------------------------------------------------------
 
 #include "server_certificate.hpp"
+#include "set_cipher_list.hpp"
 
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/placeholders.hpp>
@@ -440,9 +441,10 @@ int main(int argc, char* argv[])
   auto const port = static_cast<unsigned short>(std::atoi(argv[2]));
   auto const doc_root = std::make_shared<std::string>(argv[3]);
 
-  boost::asio::io_context ioc{1};       // The io_context is required for all I/O
-  ssl::context ctx{ssl::context::tls};  // The SSL context is required, and holds certificates
-  load_server_certificate(ctx);         // This holds the self-signed certificate used by the server
+  boost::asio::io_context ioc{1};         // The io_context is required for all I/O
+  ssl::context ctx{ssl::context::tls};    // The SSL context is required, and holds certificates
+  set_cipher_list(ctx, ssl_cipher_list);  // Configure high level ciphers only
+  load_server_certificate(ctx);           // This holds the self-signed certificate used by the server
 
   // Create and launch a listening port
   std::make_shared<https_server>(ioc, ctx, tcp::endpoint{address, port}, doc_root)->run();
