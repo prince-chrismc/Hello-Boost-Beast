@@ -1,0 +1,59 @@
+/*
+MIT License
+
+Copyright (c) 2019 Chris McArthur, prince.chrismc(at)gmail(dot)com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+#ifndef BOOST_BEAST_EXAMPLE_COMMON_SERVER_CERTIFICATE_HPP
+#define BOOST_BEAST_EXAMPLE_COMMON_SERVER_CERTIFICATE_HPP
+
+#include "use_tmp_ecdh.hpp"
+
+// Load a signed certificate into the ssl context, and configure
+// the context for use with a server.
+inline void load_server_certificate(boost::asio::ssl::context& ctx)
+{
+  const std::string cert = R"###(%%SERVER_CERT%%)###";
+
+  const std::string key = R"###(%%SERVER_KEY%%)###";
+
+  const std::string dh = R"###(%%DH_PARAM%%)###";
+
+  ctx.set_options(
+      boost::asio::ssl::context::default_workarounds |
+      boost::asio::ssl::context::no_sslv2 |
+      boost::asio::ssl::context::no_sslv3 |
+      boost::asio::ssl::context::no_tlsv1 |
+      boost::asio::ssl::context::single_dh_use);
+
+  ctx.use_certificate_chain(
+      boost::asio::buffer(cert.data(), cert.size()));
+
+  use_tmp_ecdh(ctx, boost::asio::buffer(cert.data(), cert.size()));
+
+  ctx.use_private_key(
+      boost::asio::buffer(key.data(), key.size()),
+      boost::asio::ssl::context::file_format::pem);
+
+  ctx.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
+}
+
+#endif

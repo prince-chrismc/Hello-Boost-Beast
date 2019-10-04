@@ -14,8 +14,8 @@ curl --http1.1 http://https.testserver.lan:8443 # I expect a "curl: (52) Empty r
 [ $? -eq 0 ] || (echo "Failed: HTTP" && exit 1)
 
 # HTTPS reports correct hostname
-[ $(wget --no-check-certificate --output-file=- "${BASE_HREF}" | grep "CN=https.testserver.lan" |
-   wc -l) -eq 1 ] || (echo "Failed: Certificate Hostname" && exit 1)
+[ $(wget --no-check-certificate --output-file=- "${BASE_HREF}" |
+   grep -c ".testserver.lan") -ge 1 ] || (echo "Failed: Certificate Hostname" && exit 1)
 
 # HTTPS does not answer from incorrect name
 
