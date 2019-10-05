@@ -17,6 +17,9 @@ curl --http1.1 http://https.testserver.lan:8443 # I expect a "curl: (52) Empty r
 [ $(wget --no-check-certificate --output-file=- "${BASE_HREF}" |
    grep -c ".testserver.lan") -ge 1 ] || (echo "Failed: Certificate Hostname" && exit 1)
 
+# HTTPS verification with CA passes
+curl --http1.1 --cacert ca/certs/ca.cert.pem "${BASE_HREF}"
+
 # HTTPS does not answer from incorrect name
 
 # Basic HTTP/1.0 response indicated connection closed
