@@ -18,7 +18,8 @@ curl --http1.1 http://https.testserver.lan:8443 # I expect a "curl: (52) Empty r
    grep -c ".testserver.lan") -ge 1 ] || (echo "Failed: Certificate Hostname" && exit 1)
 
 # HTTPS verification with CA passes
-curl --http1.1 --cacert ca/certs/ca.cert.pem "${BASE_HREF}"
+curl -v --http1.1 --cacert "$(pwd)/ca/certs/ca.cert.pem" "${BASE_HREF}"
+openssl s_client -showcerts -servername server -connect 127.0.0.1:8443
 
 # HTTPS does not answer from incorrect name
 
