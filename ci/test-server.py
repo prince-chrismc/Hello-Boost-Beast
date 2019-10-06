@@ -21,5 +21,6 @@ rv = requests.get(
     host + "/",
     #  verify=False,
     #  verify="ca/intermediate/certs/ca-chain.cert.pem")
-    verify="ca/intermediate/certs/")
+    # verify="ca/intermediate/certs/"
+)
 print(rv.status_code)  # Status code of response
