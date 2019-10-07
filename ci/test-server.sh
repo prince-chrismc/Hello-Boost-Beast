@@ -9,28 +9,6 @@ BASE_HREF="https://https.testserver.lan:8443"
 README_HREF="${BASE_HREF}/README.md"
 LICENSE_HREF="${BASE_HREF}/LICENSE"
 
-# HTTP does not answer
-curl --http1.1 http://https.testserver.lan:8443 # I expect a "curl: (52) Empty reply from server"
-[ $? -eq 0 ] || (echo "Failed: HTTP" && exit 1)
-
-# HTTPS reports correct hostname
-[ $(wget --no-check-certificate --output-file=- "${BASE_HREF}" |
-   grep -c ".testserver.lan") -ge 1 ] || (echo "Failed: Certificate Hostname" && exit 1)
-
-# HTTPS verification with CA passes
-curl -v --http1.1 --cacert "$(pwd)/ca/certs/ca.cert.pem" "${BASE_HREF}"
-openssl s_client -showcerts -servername server -connect 127.0.0.1:8443
-
-###
-mkdir /usr/local/share/ca-certificates
-cp ca.cert.pem /usr/local/share/ca-certificates
-sudo cp ca.cert.pem /usr/local/share/ca-certificates
-cd /usr/local/share/ca-certificates/
-openssl x509 -outform der -in ca.cert.pem -out testerver.lan.crt
-sudo openssl x509 -outform der -in ca.cert.pem -out testerver.lan.crt
-sudo update-ca-certificates
-sudo cp testerver.lan.crt /etc/ssl/certs/
-
 # HTTPS does not answer from incorrect name
 
 # Basic HTTP/1.0 response indicated connection closed
