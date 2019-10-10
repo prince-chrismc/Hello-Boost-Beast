@@ -14,7 +14,7 @@ if len(sys.argv) == 3:
     port = sys.argv[2]
 print("Targert: '{0}:{1}'".format(host, port))
 
-unsecure = "http://" + host + ':' port
+unsecure = "http://{0}:{1}".format(host, port)
 print("Sending unsecure HTTP to {}...".format(unsecure))
 r1 = requests.get(unsecure + "/", verify=False)
 if not r1.status_code == 404:
