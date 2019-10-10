@@ -22,7 +22,7 @@ try:
 except requests.ConnectionError:
     pass
 else:
-    print("FAILED: Obtained a ({}) from server".format(r1.status_code))
+    print("FAILED: Obtained a response or unexpected error from server")
     exit(1)
 
 # test_02
