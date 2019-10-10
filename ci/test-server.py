@@ -3,7 +3,7 @@ import ssl
 import requests
 import OpenSSL
 
-if 2 <= len(sys.argv) <= 3:
+if not 2 <= len(sys.argv) <= 3:
     print("Args: '{0}' was not valid.".format(sys.argv), file=sys.stderr)
     print("Usage: {0} <host> <port>\n   host: Fully Qualifed Domain Name (FQDN)\n   port: optional. default 443\n".format(sys.argv[0]))
     exit(127)
