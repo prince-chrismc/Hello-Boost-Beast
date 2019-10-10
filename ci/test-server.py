@@ -24,7 +24,6 @@ if not r1.status_code == 404:
 
 fqdn = host
 fqdn = fqdn.replace("https://", "")
-print("Trying to obtain certificate from {}...".format(fqdn))
 index = fqdn.find(":")
 if index == -1:
     port = 443
@@ -32,6 +31,7 @@ else:
     port = int(fqdn.split(":")[1])
     fqdn = fqdn.split(":")[0]
 
+print("Trying to obtain certificate from {}:{}...".format(fqdn, port))
 cert = ssl.get_server_certificate((fqdn, port))
 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
 subject = x509.get_subject().get_components()
@@ -39,9 +39,4 @@ if b'CN' in subject:
     if not subject[b'CN'] == fqdn:
         print("FAILED: certificate CN '{0}' did not match {1}."
               .format(x509.get_subject().get_components()['CN'], fqdn))
-
-print("Sending basic un-verified request...")
-r2 = requests.get(host + "/", verify=False)
-
-print("Sending verified request...")
-r3 = requests.get(host + "/", verify=False)
+        exit(2)
