@@ -31,7 +31,22 @@ SOFTWARE.
 // the context for use with a server.
 inline void load_server_certificate(boost::asio::ssl::context& ctx)
 {
-  const std::string cert = R"###(-----BEGIN CERTIFICATE-----
+  const std::string cert_chain = R"###(-----BEGIN CERTIFICATE-----
+MIICRjCCAeugAwIBAgIUd9kvSZtlpRjBbQffBFHSfWRmif8wCgYIKoZIzj0EAwIw
+bzELMAkGA1UEBhMCQ0ExDzANBgNVBAgMBlF1ZWJlYzEXMBUGA1UECgwOcHJpbmNl
+LWNocmlzbWMxGjAYBgNVBAsMEUhlbGxvLUJvb3N0LUJlYXN0MRowGAYDVQQDDBFj
+YS50ZXN0c2VydmVyLmxhbjAgFw0xOTEwMDQwMDM1MDhaGA8yMDY5MDkyMTAwMzUw
+OFowbzELMAkGA1UEBhMCQ0ExDzANBgNVBAgMBlF1ZWJlYzEXMBUGA1UECgwOcHJp
+bmNlLWNocmlzbWMxGjAYBgNVBAsMEUhlbGxvLUJvb3N0LUJlYXN0MRowGAYDVQQD
+DBFjYS50ZXN0c2VydmVyLmxhbjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABNGb
+XbjD46tg8+TeHiFW13/cJvL4ZEKmt7TcG7D8o0CI5SFtChhznD3FOLruCjHPoqch
+StsV3msCzXvkmCRNBLqjYzBhMB0GA1UdDgQWBBTpzIBfyyGXtuHTCl+V7XWfPTb7
+RjAfBgNVHSMEGDAWgBTpzIBfyyGXtuHTCl+V7XWfPTb7RjAPBgNVHRMBAf8EBTAD
+AQH/MA4GA1UdDwEB/wQEAwIBhjAKBggqhkjOPQQDAgNJADBGAiEAm3QrNMHXHM9S
+ViJb9KnZIYLWQY+mpQw26sBmyTcMUxwCIQCtu7+PnNdd/oA0qoWG+ckRaNQk10wx
+t/HPKw6yf3nARQ==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
 MIIDDjCCArSgAwIBAgICEAEwCgYIKoZIzj0EAwIwcDELMAkGA1UEBhMCQ0ExDzAN
 BgNVBAgMBlF1ZWJlYzEXMBUGA1UECgwOcHJpbmNlLWNocmlzbWMxGjAYBgNVBAsM
 EUhlbGxvLUJvb3N0LUJlYXN0MRswGQYDVQQDDBJpY2EudGVzdHNlcnZlci5sYW4w
@@ -51,6 +66,23 @@ XQTYXqH4I8nh0fC7m76LWJR0j0onSj6NbVhTXM+8CAIhAONlsQ9ZSzFgR1YFb26q
 lGsmD6axHKeR6vFldPnfQRkG
 -----END CERTIFICATE-----
 -----BEGIN CERTIFICATE-----
+MIICRjCCAeugAwIBAgIUd9kvSZtlpRjBbQffBFHSfWRmif8wCgYIKoZIzj0EAwIw
+bzELMAkGA1UEBhMCQ0ExDzANBgNVBAgMBlF1ZWJlYzEXMBUGA1UECgwOcHJpbmNl
+LWNocmlzbWMxGjAYBgNVBAsMEUhlbGxvLUJvb3N0LUJlYXN0MRowGAYDVQQDDBFj
+YS50ZXN0c2VydmVyLmxhbjAgFw0xOTEwMDQwMDM1MDhaGA8yMDY5MDkyMTAwMzUw
+OFowbzELMAkGA1UEBhMCQ0ExDzANBgNVBAgMBlF1ZWJlYzEXMBUGA1UECgwOcHJp
+bmNlLWNocmlzbWMxGjAYBgNVBAsMEUhlbGxvLUJvb3N0LUJlYXN0MRowGAYDVQQD
+DBFjYS50ZXN0c2VydmVyLmxhbjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABNGb
+XbjD46tg8+TeHiFW13/cJvL4ZEKmt7TcG7D8o0CI5SFtChhznD3FOLruCjHPoqch
+StsV3msCzXvkmCRNBLqjYzBhMB0GA1UdDgQWBBTpzIBfyyGXtuHTCl+V7XWfPTb7
+RjAfBgNVHSMEGDAWgBTpzIBfyyGXtuHTCl+V7XWfPTb7RjAPBgNVHRMBAf8EBTAD
+AQH/MA4GA1UdDwEB/wQEAwIBhjAKBggqhkjOPQQDAgNJADBGAiEAm3QrNMHXHM9S
+ViJb9KnZIYLWQY+mpQw26sBmyTcMUxwCIQCtu7+PnNdd/oA0qoWG+ckRaNQk10wx
+t/HPKw6yf3nARQ==
+-----END CERTIFICATE-----
+)###";
+
+  const std::string cert = R"###(-----BEGIN CERTIFICATE-----
 MIICRjCCAeugAwIBAgIUd9kvSZtlpRjBbQffBFHSfWRmif8wCgYIKoZIzj0EAwIw
 bzELMAkGA1UEBhMCQ0ExDzANBgNVBAgMBlF1ZWJlYzEXMBUGA1UECgwOcHJpbmNl
 LWNocmlzbWMxGjAYBgNVBAsMEUhlbGxvLUJvb3N0LUJlYXN0MRowGAYDVQQDDBFj
@@ -97,7 +129,11 @@ H512gn0CQpuIr2JV0DkQnezzrIjtSUFCDutuo+cFcpAeGTaGgYm+BTsCAQI=
       boost::asio::ssl::context::single_dh_use);
 
   ctx.use_certificate_chain(
-      boost::asio::buffer(cert.data(), cert.size()));
+      boost::asio::buffer(cert_chain.data(), cert_chain.size()));
+
+  ctx.use_certificate(
+      boost::asio::buffer(cert.data(), cert.size()),
+      boost::asio::ssl::context::file_format::pem);
 
   use_tmp_ecdh(ctx, boost::asio::buffer(cert.data(), cert.size()));
 

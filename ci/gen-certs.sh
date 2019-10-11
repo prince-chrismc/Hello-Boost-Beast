@@ -61,10 +61,12 @@ chmod 444 ca/intermediate/certs/intermediate.cert.pem
 # openssl x509 -noout -text \
 #    -in ca/intermediate/certs/intermediate.cert.pem
 
-# openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/intermediate.cert.pem
+openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/intermediate.cert.pem
 
-cp ca/certs/ca.cert.pem ca/intermediate/certs/ca-chain.cert.pem
+cat ca/certs/ca.cert.pem ca/intermediate/certs/intermediate.cert.pem >ca/intermediate/certs/ca-chain.cert.pem
 chmod 444 ca/intermediate/certs/ca-chain.cert.pem
+
+openssl verify ca/intermediate/certs/ca-chain.cert.pem
 
 # Create DH parameters
 openssl dhparam -out ca/intermediate/private/dhparam.pem 4096
@@ -102,6 +104,10 @@ openssl ca -batch -batch -config intermediate-openssl.cnf -extensions server_cer
 cat ca/intermediate/certs/ecdsa.$FQDN.cert.pem \
    ca/intermediate/certs/ca-chain.cert.pem \
    >ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
+
+openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
+openssl verify ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
+
 # openssl pkcs12 -passout pass: -export \
 #    -out ca/intermediate/certs/ecdsa.$FQDN.cert.pfx \
 #    -inkey ca/intermediate/private/ecdsa.$FQDN.key.pem \
