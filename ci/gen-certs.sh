@@ -54,7 +54,8 @@ openssl ca -batch -config openssl.cnf -extensions v3_intermediate_ca \
    -days 18250 -notext -md sha256 \
    -in ca/intermediate/csr/intermediate.csr.pem \
    -out ca/intermediate/certs/intermediate.cert.pem \
-   -subj "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=$INT_FQDN"
+   -subj "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=$INT_FQDN" \
+   2>/var/tmp/intermediate.cert.pem.log
 
 chmod 444 ca/intermediate/certs/intermediate.cert.pem
 
@@ -63,15 +64,18 @@ chmod 444 ca/intermediate/certs/intermediate.cert.pem
 
 openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/intermediate.cert.pem
 
+# cp ca/intermediate/certs/intermediate.cert.pem ca/intermediate/certs/ca-chain.cert.pem
 cat ca/certs/ca.cert.pem ca/intermediate/certs/intermediate.cert.pem >ca/intermediate/certs/ca-chain.cert.pem
 chmod 444 ca/intermediate/certs/ca-chain.cert.pem
 
-openssl verify ca/intermediate/certs/ca-chain.cert.pem
+openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/ca-chain.cert.pem
 
 # Create DH parameters
+echo "Generating dhparam.pem"
 openssl dhparam -out ca/intermediate/private/dhparam.pem 4096
 
 # Create CRL
+echo "Generating intermediate.crl.pem"
 openssl ca -batch -config intermediate-openssl.cnf -gencrl \
    -out ca/intermediate/crl/intermediate.crl.pem
 
@@ -84,7 +88,7 @@ openssl req -config intermediate-openssl.cnf -new -sha256 \
 openssl ca -batch -config intermediate-openssl.cnf -extensions ocsp \
    -days 18250 -notext -md sha256 \
    -in ca/intermediate/csr/ocsp.$DOMAIN.csr.pem \
-   -out ca/intermediate/certs/ocsp.$DOMAIN.cert.pem
+   -out ca/intermediate/certs/ocsp.$DOMAIN.cert.pem 2>/var/tmp/ocsp.$DOMAIN.csr.pem.log
 
 # Create ECDSA key
 FQDN="https.$DOMAIN"
@@ -100,13 +104,12 @@ openssl req -config intermediate-openssl.cnf \
 # Sign ECDSA CSR
 openssl ca -batch -batch -config intermediate-openssl.cnf -extensions server_cert \
    -days 18250 -notext -md sha256 -in ca/intermediate/csr/ecdsa.$FQDN.csr.pem \
-   -out ca/intermediate/certs/ecdsa.$FQDN.cert.pem
-cat ca/intermediate/certs/ecdsa.$FQDN.cert.pem \
-   ca/intermediate/certs/ca-chain.cert.pem \
+   -out ca/intermediate/certs/ecdsa.$FQDN.cert.pem 2>/var/tmp/ecdsa.$FQDN.cert.pem.log
+
+cat ca/intermediate/certs/ca-chain.cert.pem ca/intermediate/certs/ecdsa.$FQDN.cert.pem \
    >ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
 
 openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
-openssl verify ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
 
 # openssl pkcs12 -passout pass: -export \
 #    -out ca/intermediate/certs/ecdsa.$FQDN.cert.pfx \
