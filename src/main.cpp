@@ -368,6 +368,7 @@ public:
   void on_shutdown(boost::system::error_code ec)
   {
     if (ec != boost::asio::error::eof &&                  // if remote has not already close underlying socket. https://stackoverflow.com/a/25703699/8480874
+        ec != boost::asio::error::connection_reset &&     // if remote has forcibly closed. https://stackoverflow.com/a/1434506/8480874
         ec != boost::asio::ssl::error::stream_truncated)  // client closed socket without doing ssl shutdown https://github.com/boostorg/beast/issues/38
       boost::asio::detail::throw_error(ec, "shutdown");
 

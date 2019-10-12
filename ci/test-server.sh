@@ -11,10 +11,6 @@ LICENSE_HREF="${BASE_HREF}/LICENSE"
 
 # HTTPS does not answer from incorrect name
 
-# Basic HTTP/1.0 response indicated connection closed
-[ $(curl-insecure --http1.0 "${BASE_HREF}" "${README_HREF}" "${LICENSE_HREF}" |
-   grep -o "Connection: closed" | wc -l) -eq 3 ] || (echo "Failed: HTTP/1.0" && exit 1)
-
 # Basic HTTP/1.1 response keep alive limit decrements
 HTTP_ONE_DOT_ONE_MULTIPLE_REQUESTS=$(curl-insecure --http1.1 "${README_HREF}" "${LICENSE_HREF}")
 [ $(echo "${HTTP_ONE_DOT_ONE_MULTIPLE_REQUESTS}" | grep -o "Keep-Alive: timeout=60, max=49" |
