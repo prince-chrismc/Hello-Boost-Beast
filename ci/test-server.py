@@ -4,18 +4,31 @@ import requests
 import OpenSSL
 import urllib3
 import http.client
+import argparse
+from os import path
 
-if not 2 <= len(sys.argv) <= 3:
-    print("Args: '{0}' was not valid.".format(sys.argv), file=sys.stderr)
-    print("Usage: {0} <host> <port>\n   host: Fully Qualifed Domain Name (FQDN)\n   port: optional. default 443\n".format(
-        sys.argv[0]))
+parser = argparse.ArgumentParser(
+    description="A small test suite that validates a secure webserver's HTTP/1.0 and HTTP/1.1 behavoirs, and tries to verofy the SSL certificate that it exposes")
+parser.add_argument("host",
+                    help="Fully Qualifed Domain Name (FQDN) of the targetted host"
+                    "(local or remote) to test and verify")
+parser.add_argument("-p", "--port", type=int, default=443,
+                    help="Port of the targetted webserver")
+parser.add_argument("--ca_cert", default="ca/certs/ca.cert.pem",
+                    help="Path to a root certificate that will be used when verifying targets certificate")
+args = parser.parse_args()
+
+host = args.host
+port = args.port
+ca_cert = args.ca_cert
+
+if not path.isfile(ca_cert):
+    print("ca_cert '{}' is not a file".format(ca_cert), file=sys.stderr)
+    parser.print_help()
     exit(127)
 
-host = sys.argv[1]
-port = 443
-if len(sys.argv) == 3:
-    port = sys.argv[2]
-print("Targert: '{0}:{1}'".format(host, port))
+print("   Targert: '{0}:{1}'\n   Verifying with: {2}"
+      .format(host, port, ca_cert))
 
 # test_01
 try:
