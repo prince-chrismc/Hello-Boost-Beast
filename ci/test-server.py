@@ -18,7 +18,7 @@ parser.add_argument("--ca_cert", default="ca/certs/ca.cert.pem",
                     help="Path to a root certificate that will be used when verifying targets certificate")
 args = parser.parse_args()
 
-host = args.host
+host = args.host.replace("host=", "")
 port = args.port
 ca_cert = args.ca_cert
 
@@ -54,7 +54,7 @@ if not r1.status_code == 404:
 # test_03
 print("Trying to obtain certificate from...")
 cert = ssl.get_server_certificate(
-    (host, port), ca_certs="ca/certs/ca.cert.pem")
+    (host, port), ca_certs=ca_cert)
 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
 subject = x509.get_subject().get_components()
 if not (b'CN', host.encode()) in subject:
@@ -84,7 +84,7 @@ for page in {"/", "/README.md", "/LICENSE"}:
 print("Attempting to verify certificate...")
 http = urllib3.PoolManager(
     cert_reqs='CERT_REQUIRED',
-    ca_certs='ca/certs/ca.cert.pem')
+    ca_certs=ca_cert)
 r3 = http.request("GET", unverified)
 if not r3.status == 404:
     print("FAILED: Obtained a ({}) from server".format(r3.status))
