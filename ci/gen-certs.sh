@@ -113,7 +113,7 @@ cat ca/intermediate/certs/intermediate.cert.pem \
    ca/certs/ca.cert.pem \
    >ca/intermediate/certs/verification-ca-chain.cert.pem
 
-openssl verify -CAfile a/intermediate/certs/verification-ca-chain.cert.pem ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
+openssl verify -CAfile ca/intermediate/certs/verification-ca-chain.cert.pem ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
 
 # openssl pkcs12 -passout pass: -export \
 #    -out ca/intermediate/certs/ecdsa.$FQDN.cert.pfx \
