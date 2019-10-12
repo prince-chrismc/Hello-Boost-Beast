@@ -54,6 +54,9 @@ http.client.HTTPConnection._http_vsn_str = 'HTTP/1.0'
 http = urllib3.PoolManager(cert_reqs='NONE')
 for page in {"/", "/README.md", "/LICENSE"}:
     r2 = http.request("GET", unverified + page)
+    if not r2.closed:
+        print("FAILED: Expected underlying connection to be closed")
+        exit(4)
     if not 'Connection' in r2.headers:
         print("FAILED: Missing 'Connection' header. Obtained headers {} from server".format(
             r2.headers))
