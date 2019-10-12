@@ -41,8 +41,9 @@ script:
   - cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
   - make
   - docker run -d -p="8443:8443" -v="${WORK_DIR}:/home/restful" --entrypoint="/home/restful/build-travis/restful" centos:7 0.0.0.0 8443 /home/restful/
-  - "./../ci/test-server.sh"
-  - python3 ./../ci/test-server.py https.testserver.lan 8443
+  - cd "${WORK_DIR}"/ci
+  - ./test-server.sh
+  - python3 test-server.py https.testserver.lan 8443
   - docker kill $(docker ps -q)
 
 notifications:
