@@ -109,7 +109,11 @@ openssl ca -batch -batch -config intermediate-openssl.cnf -extensions server_cer
 cat ca/intermediate/certs/ecdsa.$FQDN.cert.pem ca/intermediate/certs/ca-chain.cert.pem \
    >ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
 
-openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
+cat ca/intermediate/certs/intermediate.cert.pem \
+   ca/certs/ca.cert.pem \
+   >ca/intermediate/certs/verification-ca-chain.cert.pem
+
+openssl verify -CAfile a/intermediate/certs/verification-ca-chain.cert.pem ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
 
 # openssl pkcs12 -passout pass: -export \
 #    -out ca/intermediate/certs/ecdsa.$FQDN.cert.pfx \
