@@ -34,7 +34,6 @@ script:
   - cd "${WORK_DIR}"/ci
   - ./gen-certs.sh
   - python3 render-certs-header.py
-  - rm -rf ca/
   - cd "${WORK_DIR}"
   - mkdir build-travis
   - cd build-travis
