@@ -27,8 +27,13 @@ if not path.isfile(ca_cert):
     parser.print_help()
     exit(127)
 
-print("   Targert: '{0}:{1}'\n   Verifying with: {2}"
+print("   -----\n"
+      "   Targert: '{0}:{1}'\n"
+      "   Verifying with: {2}\n"
+      "   -----\n"
       .format(host, port, ca_cert))
+
+urllib3.disable_warnings()  # Unverified are for test purposes
 
 # test_01
 try:
@@ -40,8 +45,6 @@ except requests.ConnectionError:
 else:
     print("FAILED: Obtained a response or unexpected error from server")
     exit(1)
-
-urllib3.disable_warnings()
 
 # test_02
 unverified = "https://{0}:{1}".format(host, port)
@@ -62,30 +65,26 @@ if not (b'CN', host.encode()) in subject:
     exit(3)
 
 # test_04
+print("Attempting to verify certificate...")
+r4 = requests.get(unverified, verify=ca_cert)
+if not r4.status_code == 404:
+    print("FAILED: Obtained a ({}) from server".format(r4.status_code))
+    exit(4)
+
+# test_05
 print("Testing HTTP/1.0 response headers {}:{}...".format(host, port))
 http.client.HTTPConnection._http_vsn = 10
 http.client.HTTPConnection._http_vsn_str = 'HTTP/1.0'
-http = urllib3.PoolManager(cert_reqs='NONE')
 for page in {"/", "/README.md", "/LICENSE"}:
-    r2 = http.request("GET", unverified + page)
-    if not r2.closed:
+    r5 = requests.get(unverified, verify=ca_cert)
+    if not r5.close:
         print("FAILED: Expected underlying connection to be closed")
-        exit(4)
-    if not 'Connection' in r2.headers:
+        exit(5)
+    if not 'Connection' in r5.headers:
         print("FAILED: Missing 'Connection' header. Obtained headers {} from server".format(
-            r2.headers))
-        exit(4)
-    if not r2.headers['Connection'] == 'closed':
+            r5.headers))
+        exit(5)
+    if not r5.headers['Connection'] == 'closed':
         print("FAILED: 'Connection' header did not indicate 'closed'. Obtained '{}' from server".format(
-            r2.headers['Connection']))
-        exit(4)
-
-# test_05
-print("Attempting to verify certificate...")
-http = urllib3.PoolManager(
-    cert_reqs='CERT_REQUIRED',
-    ca_certs=ca_cert)
-r3 = http.request("GET", unverified)
-if not r3.status == 404:
-    print("FAILED: Obtained a ({}) from server".format(r3.status))
-    exit(5)
+            r5.headers['Connection']))
+        exit(5)
