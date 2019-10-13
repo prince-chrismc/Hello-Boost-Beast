@@ -8,7 +8,7 @@ import argparse
 from os import path
 
 parser = argparse.ArgumentParser(
-    description="A small test suite that validates a secure webserver's HTTP/1.0 and HTTP/1.1 behavoirs, and tries to verofy the SSL certificate that it exposes")
+    description="A small test suite that validates a secure webserver's HTTP/1.0 and HTTP/1.1 behavoirs, and tries to verify the SSL certificate that it exposes")
 parser.add_argument("host",
                     help="Fully Qualifed Domain Name (FQDN) of the targetted host"
                     "(local or remote) to test and verify")
