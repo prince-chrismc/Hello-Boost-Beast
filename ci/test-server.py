@@ -18,7 +18,7 @@ parser.add_argument("--ca_cert", default="ca/certs/ca.cert.pem",
                     help="Path to a root certificate that will be used when verifying targets certificate")
 args = parser.parse_args()
 
-host = args.host.replace("host=", "")
+host = args.host
 port = args.port
 ca_cert = args.ca_cert
 
