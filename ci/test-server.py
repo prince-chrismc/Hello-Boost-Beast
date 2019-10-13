@@ -38,7 +38,7 @@ urllib3.disable_warnings()  # Unverified are for test purposes
 # test_01
 try:
     unsecure = "http://{0}:{1}/".format(host, port)
-    print("Sending unsecure HTTP to {}...".format(unsecure))
+    print("Sending unsecure HTTP...")
     requests.get(unsecure)
 except requests.ConnectionError:
     pass
@@ -48,7 +48,7 @@ else:
 
 # test_02
 unverified = "https://{0}:{1}".format(host, port)
-print("Sending HTTPS to {} without checking certificate...".format(unverified))
+print("Sending HTTPS to without checking certificate...")
 r1 = requests.get(unverified, verify=False)
 if not r1.status_code == 404:
     print("FAILED: Obtained a ({}) from server".format(r1.status_code))
@@ -72,11 +72,11 @@ if not r4.status_code == 404:
     exit(4)
 
 # test_05
-print("Testing HTTP/1.0 response headers {}:{}...".format(host, port))
+print("Testing HTTP/1.0 response headers...")
 http.client.HTTPConnection._http_vsn = 10
 http.client.HTTPConnection._http_vsn_str = 'HTTP/1.0'
 for page in {"/", "/README.md", "/LICENSE"}:
-    r5 = requests.get(unverified, verify=ca_cert)
+    r5 = requests.get(unverified + page, verify=ca_cert)
     if not r5.close:
         print("FAILED: Expected underlying connection to be closed")
         exit(5)
@@ -88,3 +88,24 @@ for page in {"/", "/README.md", "/LICENSE"}:
         print("FAILED: 'Connection' header did not indicate 'closed'. Obtained '{}' from server".format(
             r5.headers['Connection']))
         exit(5)
+
+# test_06
+print("Testing HTTP/1.1 response headers...")
+http.client.HTTPConnection._http_vsn = 11
+http.client.HTTPConnection._http_vsn_str = 'HTTP/1.1'
+with requests.Session() as s:
+    s.verify = ca_cert
+    for index, page in enumerate({"/", "/README.md", "/LICENSE"}):
+        r6 = s.get(unverified + page)
+        if not 'Keep-Alive' in r6.headers:
+            print("FAILED: Missing 'Keep-Alive' header. Obtained headers {} from server".format(
+                r6.headers))
+            exit(6)
+        if not 'timeout=60' in r6.headers['Keep-Alive']:
+            print("FAILED: 'Keep-Alive' header did not indicate 'timeout' interval. Obtained '{}' from server".format(
+                r6.headers['Keep-Alive']))
+            exit(6)
+        if not 'max={}'.format(49-index) in r6.headers['Keep-Alive']:
+            print("FAILED: 'Keep-Alive' header did not indicate 'max' limit. Obtained '{}' from server".format(
+                r6.headers['Keep-Alive']))
+            exit(6)
