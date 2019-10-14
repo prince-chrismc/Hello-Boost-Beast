@@ -5,6 +5,7 @@ import OpenSSL
 import urllib3
 import http.client
 import argparse
+import time
 from os import path
 
 parser = argparse.ArgumentParser(
@@ -109,3 +110,24 @@ with requests.Session() as s:
             print("FAILED: 'Keep-Alive' header did not indicate 'max' limit. Obtained '{}' from server".format(
                 r6.headers['Keep-Alive']))
             exit(6)
+
+# test_07
+print("Testing HTTP/1.1 connection presistency...")
+with requests.Session() as s:
+    s.verify = ca_cert
+    for page in {"/", "/README.md", "/LICENSE"}:
+        print("   - GET: {}".format(unverified + page))
+        r7 = s.get(unverified + page)
+        if not 'Keep-Alive' in r7.headers:
+            print("FAILED: Missing 'Keep-Alive' header. Obtained headers {} from server".format(
+                r7.headers))
+            exit(7)
+        if not 'timeout=60' in r7.headers['Keep-Alive']:
+            print("FAILED: 'Keep-Alive' header did not indicate 'timeout' interval. Obtained '{}' from server".format(
+                r7.headers['Keep-Alive']))
+            exit(7)
+        if not 'max=49' in r7.headers['Keep-Alive']:
+            print("FAILED: 'Keep-Alive' header did not indicate 'max' limit. Obtained '{}' from server".format(
+                r7.headers['Keep-Alive']))
+            exit(7)
+        time.sleep(61)
