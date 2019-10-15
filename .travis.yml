@@ -41,7 +41,6 @@ script:
   - make
   - docker run -d -p="8443:8443" -v="${WORK_DIR}:/home/restful" --entrypoint="/home/restful/build-travis/restful" centos:7 0.0.0.0 8443 /home/restful/
   - cd "${WORK_DIR}"/ci
-  - ./test-server.sh
   - python3 test-server.py https.testserver.lan -p 8443
   - docker kill $(docker ps -q)
 
