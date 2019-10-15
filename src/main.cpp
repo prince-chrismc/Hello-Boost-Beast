@@ -438,7 +438,7 @@ int main(int argc, char* argv[])
 {
   // Check command line arguments.
   if (argc != 4) {
-    std::cerr << "Usage: http-server-async-ssl <address> <port> <doc_root>\n"
+    std::cerr << "Usage: " << argv[0] << " <address> <port> <root>\n"
               << "Example:\n    " << argv[0] << " 0.0.0.0 8443 . \n";
     return EXIT_FAILURE;
   }
