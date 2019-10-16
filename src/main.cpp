@@ -315,8 +315,11 @@ public:
 
     // This means they closed the connection
     if (ec == http::error::end_of_stream ||
-        ec == boost::asio::ssl::error::stream_truncated)
+        ec == boost::asio::ssl::error::stream_truncated ||
+        ec == boost::asio::error::connection_reset)
       return do_close();
+    // else if (ec)
+    //   std::cerr << "read: (" << ec.value() << ") " << ec.message() << "\n";
 
     boost::asio::detail::throw_error(ec, "read");
 
@@ -352,8 +355,10 @@ public:
         [self](boost::beast::error_code ec) {
           if (ec == boost::asio::error::operation_aborted)
             self->check_deadline();
-          else if (!ec)
+          else if (!ec) {
+            std::cerr << "deadline: closing stale connection.\n";
             self->do_close();  // Close socket to cancel any outstanding operation.
+          }
         });
   }
 
@@ -371,6 +376,7 @@ public:
   void on_shutdown(boost::system::error_code ec)
   {
     if (ec != boost::asio::error::eof &&                  // if remote has not already close underlying socket. https://stackoverflow.com/a/25703699/8480874
+        ec != boost::asio::error::connection_reset &&     // if remote has forcibly closed. https://stackoverflow.com/a/1434506/8480874
         ec != boost::asio::ssl::error::stream_truncated)  // client closed socket without doing ssl shutdown https://github.com/boostorg/beast/issues/38
       boost::asio::detail::throw_error(ec, "shutdown");
 
@@ -435,7 +441,7 @@ int main(int argc, char* argv[])
 {
   // Check command line arguments.
   if (argc != 4) {
-    std::cerr << "Usage: http-server-async-ssl <address> <port> <doc_root>\n"
+    std::cerr << "Usage: " << argv[0] << " <address> <port> <root>\n"
               << "Example:\n    " << argv[0] << " 0.0.0.0 8443 . \n";
     return EXIT_FAILURE;
   }
