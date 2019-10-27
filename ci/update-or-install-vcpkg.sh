@@ -4,6 +4,7 @@ if [ ! -d "$1" ]; then
 fi
 
 VCPKG_REPO_EXISTS="FALSE"
+PKGS="boost-beast openssl fmt"
 
 if [ -d "$HOME/vcpkg/.git/" ]; then
    VCPKG_REPO_EXISTS="TRUE"
@@ -27,5 +28,6 @@ else
    git apply -v --ignore-whitespace "$1"/vcpkg.patch
    git commit -a -m "patching asio and beast version"
    export VCPKG_CXX_FLAGS="-std=c++11 -D _GLIBCXX_USE_CXX11_ABI=0"
-   ./vcpkg install beast:x64-linux openssl:x64-linux
 fi
+
+./vcpkg install "${PKGS}"

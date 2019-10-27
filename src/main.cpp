@@ -16,6 +16,7 @@
 #include "server_certificate.hpp"
 #include "set_cipher_list.hpp"
 
+#include <fmt/format.h>
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/placeholders.hpp>
 #include <boost/asio/ssl/stream.hpp>
@@ -28,6 +29,17 @@
 using tcp = boost::asio::ip::tcp;     // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;     // from <boost/asio/ssl.hpp>
 namespace http = boost::beast::http;  // from <boost/beast/http.hpp>
+
+// template <>
+// struct fmt::formatter<boost::system::error_code> {
+//   template <typename FormatContext, typename OutputIt>
+//   OutputIt format(const boost::system::error_code& ec, FormatContext& ctx)
+//   {
+//     return format_to(ctx.out(), "{msg} ({val:x})",
+//                      fmt::arg("val", ec.value()),
+//                      fmt::arg("msg", ec.message()));
+//   }
+// };
 
 // Return a reasonable mime type based on the extension of a file.
 boost::beast::string_view mime_type(boost::beast::string_view path)
@@ -67,13 +79,13 @@ boost::beast::string_view mime_type(boost::beast::string_view path)
 std::string path_cat(boost::beast::string_view base, boost::beast::string_view path)
 {
   if (base.empty())
-	  return path.to_string();
+    return path.to_string();
 
   std::string result = base.to_string();
 #if BOOST_MSVC
   char constexpr path_separator = '\\';
   if (result.back() == path_separator)
-	  result.resize(result.size() - 1);
+    result.resize(result.size() - 1);
   result.append(path.data(), path.size());
   for (auto& c : result)
     if (c == '/') c = path_separator;
@@ -281,8 +293,7 @@ public:
             [self](boost::system::error_code ec) {
               if (!ec)
                 return self->on_handshake(ec);
-              std::cerr << "handshake"
-                        << ": " << ec.message() << "\n";
+              fmt::print(stderr, "handshake: {}\n", ec.message());
             }));
   }
 
@@ -319,7 +330,7 @@ public:
         ec == boost::asio::error::connection_reset)
       return do_close();
     // else if (ec)
-    //   std::cerr << "read: (" << ec.value() << ") " << ec.message() << "\n";
+    //   fmt::print(stderr, "read: {}\n", ec.message());
 
     boost::asio::detail::throw_error(ec, "read");
 
@@ -355,8 +366,9 @@ public:
         [self](boost::beast::error_code ec) {
           if (ec == boost::asio::error::operation_aborted)
             self->check_deadline();
+
           else if (!ec) {
-            std::cerr << "deadline: closing stale connection.\n";
+            fmt::print(stderr, "deadline: closing stale connection.\n");
             self->do_close();  // Close socket to cancel any outstanding operation.
           }
         });
@@ -365,7 +377,7 @@ public:
   void do_close()
   {
     if (!stream_.lowest_layer().is_open())
-      return;
+      return;  // Already closed
 
     // Perform the SSL shutdown
     auto self = shared_from_this();
@@ -431,6 +443,7 @@ public:
   {
     // Create the https_connection and run it
     std::make_shared<https_connection>(std::move(socket_), ctx_, doc_root_)->run();
+
     do_accept();  // Accept another connection
   }
 };
@@ -441,8 +454,8 @@ int main(int argc, char* argv[])
 {
   // Check command line arguments.
   if (argc != 4) {
-    std::cerr << "Usage: " << argv[0] << " <address> <port> <root>\n"
-              << "Example:\n    " << argv[0] << " 0.0.0.0 8443 . \n";
+    fmt::print(stderr, "Invalid number of arguements!\n\n");
+    fmt::print("Usage: {0} <address> <port> <root>\nExample:\n    {0} 0.0.0.0 8443 . \n", argv[0]);
     return EXIT_FAILURE;
   }
 
