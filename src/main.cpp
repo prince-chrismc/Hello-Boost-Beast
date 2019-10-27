@@ -271,8 +271,8 @@ class https_connection : public std::enable_shared_from_this<https_connection> {
 
 public:
   // Take ownership of the socket
-  explicit https_connection(tcp::socket socket, ssl::context& ctx,
-                            std::shared_ptr<std::string const> const& doc_root)
+  https_connection(tcp::socket socket, ssl::context& ctx,
+                   std::shared_ptr<std::string const> const& doc_root)
       : socket_(std::move(socket)),
         stream_(socket_, ctx),
         strand_(socket_.get_executor()),
