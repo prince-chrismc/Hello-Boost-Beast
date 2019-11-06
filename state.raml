@@ -1,0 +1,99 @@
+#%RAML 1.0
+
+title: Program State
+baseUri: http://example.testserver.lan/
+mediaType: application/json
+
+types:
+   endpoints:
+      type: |
+         {  "$schema": "http://json-schema.org/draft-04/schema#",
+            "type": "array",
+            "description": "API endpoints exposed",
+            "items": {
+               "type": "string",
+               "enum": [
+                  "count/",
+                  "time/"
+               ],
+               "minItems": 2,
+               "maxItems": 2,
+               "uniqueItems": true
+            }
+         }
+   count:
+      type: |
+         {  "$schema": "http://json-schema.org/draft-04/schema#",
+            "type": "object",
+            "description": "Count",
+            "required": [ "count" ]
+            "properties": {
+               "count": { "type": integer }
+            }
+         }
+   time: 
+      type: |
+         { "$schema": "http://json-schema.org/draft-04/schema#",
+           "type": "object",
+           "title": "The Root Schema",
+           "required": [
+              "time",
+              "human"
+            ],
+            "properties": {
+               "time": { "type": "integer" }
+               "human": { "type": "string" }
+            }
+         }
+
+documentation:
+   - title: Overview
+     content: |
+      The State API is exposed to be able to check the current state.
+
+/:
+   displayName: endpoints
+   get:
+      responses:
+         200:
+            body:
+               type: endpoints
+               example: |
+                  [
+                     "count/",
+                     "time/"
+                  ]
+/count:
+   get:
+      description: Retrieve the number of requests (including the current one)
+      responses:
+         200:
+            body:
+               type: count
+               example: |
+                  {
+                     "count": 42
+                  }
+   delete:
+      description: Resets the number of requests
+      responses:
+         200:
+         409:
+            body:
+               type: count
+               example: |
+                  {
+                     "count": 17
+                  }
+/time:
+   get:
+      description: Retrives the servers current time
+      responses:
+         200:
+            body:
+               type: time
+               example: |
+                  {
+                     "time": 1573004942,
+                     "human": "Tuesday, November 5, 2019 8:48:44 PM GMT-05:00"
+                  }
