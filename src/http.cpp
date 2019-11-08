@@ -24,6 +24,8 @@ SOFTWARE.
 
 */
 
+#include "program_state.hpp"
+
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/placeholders.hpp>
 #include <boost/asio/strand.hpp>
@@ -34,19 +36,6 @@ SOFTWARE.
 namespace ip = boost::asio::ip;       // from <boost/asio.hpp>
 using tcp = boost::asio::ip::tcp;     // from <boost/asio.hpp>
 namespace http = boost::beast::http;  // from <boost/beast/http.hpp>
-
-namespace my_program_state {
-std::size_t request_count()
-{
-  static std::size_t count = 0;
-  return ++count;
-}
-
-std::time_t now()
-{
-  return std::time(0);
-}
-}  // namespace my_program_state
 
 class http_connection : public std::enable_shared_from_this<http_connection> {
 public:
