@@ -24,7 +24,7 @@ SOFTWARE.
 
 */
 
-#include <array>
+#include <boost/array.hpp>
 #include <boost/beast.hpp>
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
@@ -52,27 +52,30 @@ struct count_arg<std::function<R(Args...)>> {
   static const size_t value = sizeof...(Args);
 };
 
-template <int N, typename T>
-struct CallbackContainer {
+template <typename F, typename T, int N>
+class CallbackContainer {
+public:
   template <typename... Ts>
-  CallbackContainer(Ts&&... vs) : data{{std::forward<Ts>(vs)...}}
+  CallbackContainer(F func, Ts&&... vs) : func{func},
+                                          data{{std::forward<Ts>(vs)...}}
   {
     static_assert(sizeof...(Ts) == N, "Not enough args supplied!");
   }
 
-  template <typename F>
-  void invoke(F&& func)
+  void invoke()
   {
     invoke(std::forward<F>(func), detail::gen_seq<N>());
   }
 
-  template <typename F, int... Is>
-  void invoke(F&& func, detail::seq<Is...>)
+private:
+  template <int... Is>
+  void invoke(detail::seq<Is...>)
   {
     (std::forward<F>(func))(data[Is]...);
   }
 
-  std::array<T, N> data;
+  F func;
+  boost::array<T, N> data;
 };
 }  // namespace detail
 
