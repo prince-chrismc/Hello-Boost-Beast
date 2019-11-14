@@ -24,19 +24,93 @@ SOFTWARE.
 
 */
 
+#include <array>
 #include <boost/beast.hpp>
 #include <boost/optional.hpp>
+#include <boost/regex.hpp>
 #include <functional>
 #include <map>
 
-namespace ip = boost::asio::ip;       // from <boost/asio.hpp>
-using tcp = boost::asio::ip::tcp;     // from <boost/asio.hpp>
-namespace http = boost::beast::http;  // from <boost/beast/http.hpp>
+namespace detail {
+template <int... Is>
+struct seq {
+};
+
+template <int N, int... Is>
+struct gen_seq : gen_seq<N - 1, N - 1, Is...> {
+};
+
+template <int... Is>
+struct gen_seq<0, Is...> : seq<Is...> {
+};
+
+template <typename T>
+struct count_arg;
+
+template <typename R, typename... Args>
+struct count_arg<std::function<R(Args...)>> {
+  static const size_t value = sizeof...(Args);
+};
+
+template <int N, typename T>
+struct CallbackContainer {
+  template <typename... Ts>
+  CallbackContainer(Ts&&... vs) : data{{std::forward<Ts>(vs)...}}
+  {
+    static_assert(sizeof...(Ts) == N, "Not enough args supplied!");
+  }
+
+  template <typename F>
+  void invoke(F&& func)
+  {
+    invoke(std::forward<F>(func), detail::gen_seq<N>());
+  }
+
+  template <typename F, int... Is>
+  void invoke(F&& func, detail::seq<Is...>)
+  {
+    (std::forward<F>(func))(data[Is]...);
+  }
+
+  std::array<T, N> data;
+};
+}  // namespace detail
+
+namespace http = boost::beast::http;
 
 template <class Request = http::request<http::empty_body>,
           class Response = http::response<http::string_body>>
 class restful_server {
-  using Handle = std::function<Response(Request&&)>;
+  using process = std::function<Response(Request&&)>;
 
-  std::map<http::verb, Handle> handlers_;
+  boost::optional<process> generic_handler_;
+  std::map<http::verb, process> handlers_;
+  std::map<http::verb, std::map<boost::string_view, process>> path_handlers_;
+
+public:
+  void support(const process& handler) { generic_handler_ = handler; }
+  void support(const http::verb& method, const process& handler)
+  {
+    handlers_[method] = handler;
+  }
+  void support(const http::verb& method, const boost::string_view& uri, const process& handler)
+  {
+    path_handlers_[method][uri] = handler;
+  }
+
+  Response operator()(Request&& req)
+  {
+    const auto uri = req.target();
+
+    boost::smatch what;
+    boost::regex pattern = uri;
+    if (boost::regex_match(uri, what, pattern)) {
+    }
+    if (handlers_.count(req.method())) {
+      return handlers_[req.method()];
+    }
+    else if (generic_handler_.has_value()) {
+      return *generic_handler_(req);
+    }
+  }
 };
