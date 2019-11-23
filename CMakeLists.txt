@@ -17,6 +17,12 @@ add_executable(restful
                src/set_cipher_list.hpp
                src/use_tmp_ecdh.hpp)
 
+			   
+add_executable(http
+               src/http.cpp
+               src/restful_server.hpp
+			   src/program_state.hpp)
+
 set_target_properties(restful
                       PROPERTIES CXX_STANDARD
                                  11
