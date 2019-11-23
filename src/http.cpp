@@ -25,6 +25,7 @@ SOFTWARE.
 */
 
 #include "program_state.hpp"
+#include "restful_server.hpp"
 
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/placeholders.hpp>
@@ -230,6 +231,10 @@ private:
 
 int main()
 {
+  using std::experimental::string_view::literals;
+  constexpr auto path = "/html/test/hello/"sv;
+  constexpr detail::UriContainer<std::experimental::string_view> uri(path);
+
   try {
     auto const address = boost::asio::ip::make_address("0.0.0.0");
     unsigned short port = static_cast<unsigned short>(80);

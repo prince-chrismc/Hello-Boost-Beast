@@ -30,6 +30,7 @@ SOFTWARE.
 #include <boost/regex.hpp>
 #include <functional>
 #include <map>
+#include <string_view>
 
 namespace detail {
 template <int... Is>
@@ -50,6 +51,26 @@ struct count_arg;
 template <typename R, typename... Args>
 struct count_arg<std::function<R(Args...)>> {
   static const size_t value = sizeof...(Args);
+};
+
+template <typename URI>
+constexpr size_t count(char c, URI s)
+{
+  return (s.find(c) == URI::npos) ? 0 : 1 + count(c, s.substr(1));
+}
+
+template <typename URI>
+class UriContainer {
+public:
+  UriContainer(URI uri) : uri_(uri),
+                          number_params_(count('{', uri))
+  {
+    static_assert(count('{', uri) == count('}', uri));
+  }
+
+private:
+  const URI uri_;
+  const size_t number_params_;
 };
 
 template <typename F, typename T, int N>
