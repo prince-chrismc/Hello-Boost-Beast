@@ -30,4 +30,4 @@ else
    export VCPKG_CXX_FLAGS="-std=c++11 -D _GLIBCXX_USE_CXX11_ABI=0"
 fi
 
-./vcpkg install "${PKGS}"
+./vcpkg install ${PKGS}
