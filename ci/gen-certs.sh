@@ -4,6 +4,11 @@
 # https://jamielinux.com/docs/openssl-certificate-authority/index.html
 # The modifications are to the algorithm is ecdsa
 
+CI="False"
+if [ $# -gt 0 ]; then
+   CI="True"
+fi
+
 rm -rf ca/
 
 echo "$0: Starting in: $(pwd)"
@@ -72,7 +77,11 @@ openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/ca-chain.cert.
 
 # Create DH parameters
 echo "Generating dhparam.pem"
-openssl dhparam -out ca/intermediate/private/dhparam.pem 4096
+if [ "$CI" = "True" ]; then
+   openssl dhparam -dsaparam -out ca/intermediate/private/dhparam.pem 2048
+else
+   openssl dhparam -out ca/intermediate/private/dhparam.pem 4096
+fi
 
 # Create CRL
 echo "Generating intermediate.crl.pem"
