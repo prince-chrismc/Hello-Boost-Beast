@@ -17,11 +17,7 @@ add_executable(restful
                src/set_cipher_list.hpp
                src/use_tmp_ecdh.hpp)
 
-			   
-add_executable(http
-               src/http.cpp
-               src/restful_server.hpp
-			   src/program_state.hpp)
+add_executable(http src/http.cpp)
 
 set_target_properties(restful
                       PROPERTIES CXX_STANDARD
@@ -40,6 +36,4 @@ target_link_libraries(restful
                               fmt::fmt-header-only)
 
 
-target_link_libraries(http
-PRIVATE Boost::system
-        Boost::thread)
+target_link_libraries(http PRIVATE Boost::system Boost::thread)
