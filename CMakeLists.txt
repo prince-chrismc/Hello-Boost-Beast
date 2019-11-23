@@ -38,3 +38,8 @@ target_link_libraries(restful
                               OpenSSL::Crypto
                               fmt::fmt
                               fmt::fmt-header-only)
+
+
+target_link_libraries(http
+PRIVATE Boost::system
+        Boost::thread)
