@@ -15,10 +15,14 @@ def find_openssl():
     return openssl_path
 
 
+def make_folders(dirs=[]):
+    for dir in dirs:
+        makedirs(dir, exist_ok=True)
+
+
 def make_root_folders():
-    makedirs("ca/certs", exist_ok=True)
-    makedirs("ca/newcerts", exist_ok=True)
-    makedirs("ca/private", mode=0o700, exist_ok=True)
+    make_folders(["ca/certs", "ca/newcerts", "ca/private"])
+    chmod("ca/private", mode=0o700)
 
     open("ca/index.txt", "w+")
     with open("ca/serial", "w+") as f:
