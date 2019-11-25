@@ -50,9 +50,13 @@ def gen_root_key(openssl):
     gen_key(openssl, key_path)
 
 
+def check_conf(file):
+    if not path.isfile(file):
+        exit("Unable to find '{}'".format(file))
+
+
 def check_openssl_conf():
-    if not path.isfile("openssl.cnf"):
-        exit("Unable to find 'openssl.cnf'")
+    check_conf("openssl.cnf")
 
 
 def gen_root_cert(openssl):
@@ -86,6 +90,22 @@ def gen_intermidate_key(openssl):
     gen_key(openssl, key_path)
 
 
+def check_intermidate_openssl_conf():
+    check_conf("intermediate-openssl.cnf")
+
+
+def gen_intermidate_signing_request(openssl):
+    print("Generating intermediate.crs.pem")
+    key_path = "ca/intermediate/private/intermediate.key.pem"
+    crs_path = "ca/intermediate/csr/intermediate.csr.pem"
+    retval = subprocess.run(
+        [openssl, "req", "-config", "intermediate-openssl.cnf", "-new", "-sha256",
+         "-key", key_path, "-out", crs_path, "-subj",
+         "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN={}".format(INT_FQDN)])
+    if not retval.returncode == 0:
+        exit("Failed!")
+
+
 openssl = find_openssl()
 
 make_root_folders()
@@ -96,3 +116,5 @@ gen_root_cert(openssl)
 
 make_intermidate_folders()
 gen_intermidate_key(openssl)
+check_intermidate_openssl_conf()
+gen_intermidate_signing_request(openssl)
