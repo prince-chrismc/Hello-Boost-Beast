@@ -106,6 +106,29 @@ def gen_intermidate_signing_request(openssl):
         exit("Failed!")
 
 
+def gen_intermidate_cert(openssl):
+    print("Generating intermediate.cert.pem")
+    crs_path = "ca/intermediate/csr/intermediate.csr.pem"
+    cert_path = "ca/intermediate/certs/intermediate.cert.pem"
+    retval = subprocess.run(
+        [openssl, "ca", "-batch", "-config", "openssl.cnf", "-extensions", "v3_intermediate_ca",
+         "-days", "18250", "-notext", "-md", "sha256", "-in", crs_path,
+         "-out", cert_path, "-subj", "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN={}".format(INT_FQDN)],
+        stderr=subprocess.DEVNULL)
+    if not retval.returncode == 0:
+        exit("Failed!")
+    chmod(cert_path, 0o444)
+
+
+def verify_intermidate_cert_with_root(openssl):
+    root_path = "ca/certs/ca.cert.pem"
+    cert_path = "ca/intermediate/certs/intermediate.cert.pem"
+    retval = subprocess.run(
+        [openssl, "verify", "-CAfile", root_path, cert_path])
+    if not retval.returncode == 0:
+        exit("Failed!")
+
+
 openssl = find_openssl()
 
 make_root_folders()
@@ -118,3 +141,5 @@ make_intermidate_folders()
 gen_intermidate_key(openssl)
 check_intermidate_openssl_conf()
 gen_intermidate_signing_request(openssl)
+gen_intermidate_cert(openssl)
+verify_intermidate_cert_with_root(openssl)

@@ -69,12 +69,6 @@ chmod 444 ca/intermediate/certs/intermediate.cert.pem
 
 openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/intermediate.cert.pem
 
-# cp ca/intermediate/certs/intermediate.cert.pem ca/intermediate/certs/ca-chain.cert.pem
-cat ca/intermediate/certs/intermediate.cert.pem >ca/intermediate/certs/ca-chain.cert.pem
-chmod 444 ca/intermediate/certs/ca-chain.cert.pem
-
-openssl verify -CAfile ca/certs/ca.cert.pem ca/intermediate/certs/ca-chain.cert.pem
-
 # Create DH parameters
 echo "Generating dhparam.pem"
 if [ "$CI" = "True" ]; then
@@ -115,7 +109,7 @@ openssl ca -batch -batch -config intermediate-openssl.cnf -extensions server_cer
    -days 18250 -notext -md sha256 -in ca/intermediate/csr/ecdsa.$FQDN.csr.pem \
    -out ca/intermediate/certs/ecdsa.$FQDN.cert.pem 2>/var/tmp/ecdsa.$FQDN.cert.pem.log
 
-cat ca/intermediate/certs/ecdsa.$FQDN.cert.pem ca/intermediate/certs/ca-chain.cert.pem \
+cat ca/intermediate/certs/ecdsa.$FQDN.cert.pem ca/intermediate/certs/intermediate.cert.pem \
    >ca/intermediate/certs/ecdsa.$FQDN.cert.chain.pem
 
 cat ca/intermediate/certs/intermediate.cert.pem \
