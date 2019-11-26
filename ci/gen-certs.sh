@@ -83,6 +83,7 @@ openssl ca -batch -config intermediate-openssl.cnf -gencrl \
    -out ca/intermediate/crl/intermediate.crl.pem
 
 # Create OCSP pair
+echo "Generating ocsp.cert.pem"
 openssl genrsa -out ca/intermediate/private/ocsp.$DOMAIN.key.pem 4096
 openssl req -config intermediate-openssl.cnf -new -sha256 \
    -key ca/intermediate/private/ocsp.$DOMAIN.key.pem \

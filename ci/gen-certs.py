@@ -108,11 +108,11 @@ def gen_intermidate_signing_request(openssl):
 
 def gen_intermidate_cert(openssl):
     print("Generating intermediate.cert.pem")
-    crs_path = "ca/intermediate/csr/intermediate.csr.pem"
+    csr_path = "ca/intermediate/csr/intermediate.csr.pem"
     cert_path = "ca/intermediate/certs/intermediate.cert.pem"
     retval = subprocess.run(
         [openssl, "ca", "-batch", "-config", "openssl.cnf", "-extensions", "v3_intermediate_ca",
-         "-days", "18250", "-notext", "-md", "sha256", "-in", crs_path,
+         "-days", "18250", "-notext", "-md", "sha256", "-in", csr_path,
          "-out", cert_path, "-subj", "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN={}".format(INT_FQDN)],
         stderr=subprocess.DEVNULL)
     if not retval.returncode == 0:
@@ -125,6 +125,38 @@ def verify_intermidate_cert_with_root(openssl):
     cert_path = "ca/intermediate/certs/intermediate.cert.pem"
     retval = subprocess.run(
         [openssl, "verify", "-CAfile", root_path, cert_path])
+    if not retval.returncode == 0:
+        exit("Failed!")
+
+
+def gen_intermidate_crl(openssl):
+    print("Generating intermediate.crl.pem")
+    crl_path = "ca/intermediate/certs/intermediate.crl.pem"
+    retval = subprocess.run(
+        [openssl, "ca", "-batch", "-config", "intermediate-openssl.cnf", "-gencrl",
+         "-out", crl_path], stderr=subprocess.DEVNULL)
+    if not retval.returncode == 0:
+        exit("Failed!")
+
+
+def gen_ocsp_pair(openssl):
+    print("Generating ocsp.cert.pem")
+    key_path = "ca/intermediate/private/ocsp.{}.key.pem".format(DOMAIN)
+    gen_key(openssl, key_path)
+
+    csr_path = "ca/intermediate/csr/ocsp.{}.crs.pem".format(DOMAIN)
+    cert_path = "ca/intermediate/csr/ocsp.{}.cert.pem".format(DOMAIN)
+    retval = subprocess.run(
+        [openssl, "req", "-config", "intermediate-openssl.cnf", "-new", "-sha256",
+         "-key", key_path, "-out", csr_path,
+         "-subj", "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=ocsp.{}".format(DOMAIN)])
+    if not retval.returncode == 0:
+        exit("Failed!")
+
+    retval = subprocess.run(
+        [openssl, "ca", "-batch", "-config", "intermediate-openssl.cnf", "-extensions", "ocsp",
+         "-days", "18250", "-notext", "-md", "sha256", "-in", csr_path, "-out",
+         cert_path], stderr=subprocess.DEVNULL)
     if not retval.returncode == 0:
         exit("Failed!")
 
@@ -143,3 +175,5 @@ check_intermidate_openssl_conf()
 gen_intermidate_signing_request(openssl)
 gen_intermidate_cert(openssl)
 verify_intermidate_cert_with_root(openssl)
+gen_intermidate_crl(openssl)
+gen_ocsp_pair(openssl)
