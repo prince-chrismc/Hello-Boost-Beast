@@ -178,48 +178,69 @@ gen_ocsp_pair(openssl)
 
 
 # Create ECDSA key
-FQDN = "https.$DOMAIN"
-print("Generating ecdsa.{}.key.pem".format(FQDN))
+FQDN = "https.{}".format(DOMAIN)
 
-# Sign ECDSA CSR
-gen_key(openssl, "ca/intermediate/private/ecdsa.{}.key.pem".format(FQDN))
-gen_signing_request(openssl, "ca/intermediate/private/ecdsa.{}.key.pem".format(FQDN),
-                    "ca/intermediate/csr/ecdsa.{}.csr.pem".format(FQDN), FQDN)
 
-# create enentity cert
-retval = subprocess.run(
-    [openssl, "ca", "-batch", "-config", "intermediate-openssl.cnf", "-extensions", "server_cert",
-        "-days", "18250", "-notext", "-md", "sha256", "-in", "ca/intermediate/csr/ecdsa.{}.csr.pem".format(
-            FQDN), "-out",
-        "ca/intermediate/certs/ecdsa.{}.cert.pem".format(FQDN)], stderr=subprocess.DEVNULL)
-if not retval.returncode == 0:
-    exit("Failed!")
+def gen_host_key(openssl):
+    print("Generating ecdsa.{}.key.pem".format(FQDN))
+    key_path = "ca/intermediate/private/ecdsa.{}.key.pem".format(FQDN)
+    gen_key(openssl, key_path)
+
+
+def gen_host_csr(openssl):
+    print("Generating ecdsa.{}.csr.pem".format(FQDN))
+    key_path = "ca/intermediate/private/ecdsa.{}.key.pem".format(FQDN)
+    csr_path = "ca/intermediate/csr/ecdsa.{}.csr.pem".format(FQDN)
+    gen_signing_request(openssl, key_path, csr_path, FQDN)
+
+
+def gen_host_cert(openssl):
+    print("Generating ecdsa.{}.cert.pem".format(FQDN))
+    csr_path = "ca/intermediate/csr/ecdsa.{}.csr.pem".format(FQDN)
+    cert_path = "ca/intermediate/certs/ecdsa.{}.certs.pem".format(FQDN)
+    retval = subprocess.run(
+        [openssl, "ca", "-batch", "-config", "intermediate-openssl.cnf",
+         "-extensions", "server_cert", "-days", "18250", "-notext", "-md", "sha256",
+         "-in", csr_path, "-out", cert_path], stderr=subprocess.DEVNULL)
+    if not retval.returncode == 0:
+        exit("Failed!")
+
 
 # Create end-entity cert chain
-with open("ca/intermediate/certs/ecdsa.{}.cert.chain.pem".format(FQDN), "w+") as f:
-    retval = subprocess.run(
-        ["cat",
-         "ca/intermediate/certs/ecdsa.{}.cert.pem".format(FQDN),
-         "ca/intermediate/certs/intermediate.cert.pem",
-         ],
-        stdout=f
-    )
-    if not retval.returncode == 0:
-        exit("Failed!")
+def gen_host_cert_chain(openssl):
+    print("Generating ecdsa.{}.cert.chain.pem".format(FQDN))
+    with open("ca/intermediate/certs/ecdsa.{}.cert.chain.pem".format(FQDN), "w+") as f:
+        host_cert_path = "ca/intermediate/certs/ecdsa.{}.certs.pem".format(
+            FQDN)
+        intermediate_cert_path = "ca/intermediate/certs/intermediate.cert.pem"
+        retval = subprocess.run(
+            ["cat", host_cert_path, intermediate_cert_path], stdout=f)
+        if not retval.returncode == 0:
+            exit("Failed!")
 
-with open("ca/intermediate/certs/verification-ca-chain.cert.pem", "w+") as f:
-    retval = subprocess.run(
-        ["cat",
-         "ca/intermediate/certs/intermediate.cert.pem",
-         "ca/certs/ca.cert.pem",
-         ],
-        stdout=f
-    )
-    if not retval.returncode == 0:
-        exit("Failed!")
 
-# Check end-entity
-retval = subprocess.run(
-    [openssl, "verify", "-CAfile",
-     "ca/intermediate/certs/verification-ca-chain.cert.pem",
-     "ca/intermediate/certs/ecdsa.{}.cert.chain.pem".format(FQDN)])
+def verify_host_against_root(openssl):
+    verification_path = "ca/intermediate/certs/verification-ca-chain.cert.pem"
+    entity_cert_path = "ca/intermediate/certs/ecdsa.{}.cert.chain.pem".format(
+        FQDN)
+    with open(verification_path, "w+") as f:
+        retval = subprocess.run(
+            ["cat",
+             "ca/intermediate/certs/intermediate.cert.pem",
+             "ca/certs/ca.cert.pem",
+             ],
+            stdout=f
+        )
+        if not retval.returncode == 0:
+            exit("Failed!")
+
+    # Check end-entity
+    retval = subprocess.run(
+        [openssl, "verify", "-CAfile", verification_path, entity_cert_path])
+
+
+gen_host_key(openssl)
+gen_host_csr(openssl)
+gen_host_cert(openssl)
+gen_host_cert_chain(openssl)
+verify_host_against_root(openssl)
