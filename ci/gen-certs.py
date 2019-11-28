@@ -177,6 +177,49 @@ gen_intermidate_crl(openssl)
 gen_ocsp_pair(openssl)
 
 
+# Create ECDSA key
+FQDN = "https.$DOMAIN"
+print("Generating ecdsa.{}.key.pem".format(FQDN))
+
+# Sign ECDSA CSR
+gen_key(openssl, "ca/intermediate/private/ecdsa.{}.key.pem".format(FQDN))
+gen_signing_request(openssl, "ca/intermediate/private/ecdsa.{}.key.pem".format(FQDN),
+                    "ca/intermediate/csr/ecdsa.{}.csr.pem".format(FQDN), FQDN)
+
+# create enentity cert
+retval = subprocess.run(
+    [openssl, "ca", "-batch", "-config", "intermediate-openssl.cnf", "-extensions", "server_cert",
+        "-days", "18250", "-notext", "-md", "sha256", "-in", "ca/intermediate/csr/ecdsa.{}.csr.pem".format(
+            FQDN), "-out",
+        "ca/intermediate/certs/ecdsa.{}.cert.pem".format(FQDN)], stderr=subprocess.DEVNULL)
+if not retval.returncode == 0:
+    exit("Failed!")
+
+# Create end-entity cert chain
+with open("ca/intermediate/certs/ecdsa.{}.cert.chain.pem".format(FQDN), "w+") as f:
+    retval = subprocess.run(
+        ["cat",
+         "ca/intermediate/certs/ecdsa.{}.cert.pem".format(FQDN),
+         "ca/intermediate/certs/intermediate.cert.pem",
+         ],
+        stdout=f
+    )
+    if not retval.returncode == 0:
+        exit("Failed!")
+
+with open("ca/intermediate/certs/verification-ca-chain.cert.pem", "w+") as f:
+    retval = subprocess.run(
+        ["cat",
+         "ca/intermediate/certs/intermediate.cert.pem",
+         "ca/certs/ca.cert.pem",
+         ],
+        stdout=f
+    )
+    if not retval.returncode == 0:
+        exit("Failed!")
+
 # Check end-entity
-# retval = subprocess.run(
-#     [openssl, "verify", "-crl_check", "-CAfile", root_path, cert_path])
+retval = subprocess.run(
+    [openssl, "verify", "-CAfile",
+     "ca/intermediate/certs/verification-ca-chain.cert.pem",
+     "ca/intermediate/certs/ecdsa.{}.cert.chain.pem".format(FQDN)])
