@@ -3,27 +3,11 @@ from os import makedirs, chmod, path
 from sys import argv
 import subprocess
 
+from . import find_openssl, make_folders, gen_key, check_conf, gen_signing_request
 
 DOMAIN = "testserver.lan"
 CA_FQDN = "ca.{}".format(DOMAIN)
 INT_FQDN = "i{}".format(CA_FQDN)
-
-
-def find_openssl():
-    openssl_path = which("openssl")
-    # print(openssl_path)
-
-    retval = subprocess.run([openssl_path, "version"],
-                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    if not retval.returncode == 0:
-        exit("Unable to find OpenSSL")
-
-    return openssl_path
-
-
-def make_folders(dirs=[]):
-    for dir in dirs:
-        makedirs(dir, exist_ok=True)
 
 
 def make_root_folders():
@@ -35,23 +19,10 @@ def make_root_folders():
         f.write("1000")
 
 
-def gen_key(openssl, key_path):
-    retval = subprocess.run(
-        [openssl, "ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", key_path])
-    if not retval.returncode == 0:
-        exit("Failed!")
-    chmod(key_path, 0o400)
-
-
 def gen_root_key(openssl):
     print("Generating ca.key.pem")
     key_path = "ca/private/ca.key.pem"
     gen_key(openssl, key_path)
-
-
-def check_conf(file):
-    if not path.isfile(file):
-        exit("Unable to find '{}'".format(file))
 
 
 def check_openssl_conf():
@@ -92,20 +63,12 @@ def check_intermidate_openssl_conf():
     check_conf("intermediate-openssl.cnf")
 
 
-def gen_signing_request(openssl, key_path, csr_path, cn):
-    retval = subprocess.run(
-        [openssl, "req", "-config", "intermediate-openssl.cnf", "-new", "-sha256",
-         "-key", key_path, "-out", csr_path, "-subj",
-         "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN={}".format(cn)])
-    if not retval.returncode == 0:
-        exit("Failed!")
-
-
 def gen_intermidate_signing_request(openssl):
     print("Generating intermediate.crs.pem")
     key_path = "ca/intermediate/private/intermediate.key.pem"
     csr_path = "ca/intermediate/csr/intermediate.csr.pem"
-    gen_signing_request(openssl, key_path, csr_path, INT_FQDN)
+    gen_signing_request(openssl, key_path, csr_path,
+                        "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN={}".format(INT_FQDN))
 
 
 def gen_intermidate_cert(openssl):
@@ -148,13 +111,14 @@ def gen_ocsp_pair(openssl):
     gen_key(openssl, key_path)
 
     csr_path = "ca/intermediate/csr/ocsp.{}.crs.pem".format(DOMAIN)
-    gen_signing_request(openssl, key_path, csr_path, "ocsp.{}".format(DOMAIN))
+    gen_signing_request(openssl, key_path, csr_path,
+                        "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=ocsp.{}".format(DOMAIN))
 
     cert_path = "ca/intermediate/csr/ocsp.{}.cert.pem".format(DOMAIN)
     retval = subprocess.run(
         [openssl, "ca", "-batch", "-config", "intermediate-openssl.cnf", "-extensions", "ocsp",
-         "-days", "18250", "-notext", "-md", "sha256", "-in", csr_path, "-out",
-         cert_path], stderr=subprocess.DEVNULL)
+         "-days", "18250", "-notext", "-md", "sha256", "-in", csr_path, "-out", cert_path],
+        stderr=subprocess.DEVNULL)
     if not retval.returncode == 0:
         exit("Failed!")
 
@@ -205,7 +169,8 @@ def gen_host_csr(openssl):
     print("Generating ecdsa.{}.csr.pem".format(FQDN))
     key_path = "ca/intermediate/private/ecdsa.{}.key.pem".format(FQDN)
     csr_path = "ca/intermediate/csr/ecdsa.{}.csr.pem".format(FQDN)
-    gen_signing_request(openssl, key_path, csr_path, FQDN)
+    gen_signing_request(openssl, key_path, csr_path,
+                        "/C=CA/ST=Quebec/O=prince-chrismc/OU=Hello-Boost-Beast/CN=ocsp.{}".format(FQDN))
 
 
 def gen_host_cert(openssl):
