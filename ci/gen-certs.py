@@ -1,7 +1,5 @@
 from shutil import which
-from os import makedirs
-from os import chmod
-from os import path
+from os import makedirs, chmod, path
 from sys import argv
 import subprocess
 
