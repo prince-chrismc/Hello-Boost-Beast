@@ -2,6 +2,7 @@ from shutil import which
 from os import makedirs
 from os import chmod
 from os import path
+from sys import argv
 import subprocess
 
 
@@ -176,6 +177,21 @@ verify_intermidate_cert_with_root(openssl)
 gen_intermidate_crl(openssl)
 gen_ocsp_pair(openssl)
 
+
+def gen_dhparam(openssl, fast=True):
+    print("Generating dhparam.pem")
+    key_path = "ca/intermediate/private/dhparam.pem"
+    if fast:
+        args = [openssl, "dhparam", "-dsaparam", "-out", key_path, "2048"]
+    else:
+        args = [openssl, "dhparam", "-out", key_path, "4096"]
+
+    retval = subprocess.run(args)
+    if not retval.returncode == 0:
+        exit("Failed!")
+
+
+gen_dhparam(openssl, len(argv) > 1)
 
 # Create ECDSA key
 FQDN = "https.{}".format(DOMAIN)
