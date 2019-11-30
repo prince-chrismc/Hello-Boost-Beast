@@ -2,6 +2,9 @@ from shutil import which
 from os import makedirs, chmod, path
 import subprocess
 
+if __name__ == "__main__":
+    pass
+
 
 def find_openssl():
     openssl_path = which("openssl")
