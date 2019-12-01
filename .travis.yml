@@ -32,7 +32,7 @@ before_script:
 
 script:
   - cd "${WORK_DIR}"/ci
-  - ./gen-certs.sh --ci
+  - python3 gen-certs.py --ci
   - python3 render-certs-header.py
   - cd "${WORK_DIR}"
   - mkdir build-travis
