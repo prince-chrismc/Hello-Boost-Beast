@@ -133,9 +133,9 @@ gen_intermidate_key(openssl)
 check_intermidate_openssl_conf()
 gen_intermidate_signing_request(openssl)
 gen_intermidate_cert(openssl)
-verify_intermidate_cert_with_root(openssl)
 gen_intermidate_crl(openssl)
-gen_ocsp_pair(openssl)
+verify_intermidate_cert_with_root(openssl)
+# gen_ocsp_pair(openssl)
 
 
 def gen_dhparam(openssl, fast=True):
@@ -183,7 +183,7 @@ def gen_host_cert(openssl):
 
 
 # Create end-entity cert chain
-def gen_host_cert_chain(openssl):
+def gen_host_cert_chain():
     print("Generating ecdsa.{}.cert.chain.pem".format(FQDN))
     with open("ca/intermediate/certs/ecdsa.{}.cert.chain.pem".format(FQDN), "w+") as f:
         host_cert_path = "ca/intermediate/certs/ecdsa.{}.certs.pem".format(
@@ -218,5 +218,5 @@ def verify_host_against_root(openssl):
 gen_host_key(openssl)
 gen_host_csr(openssl)
 gen_host_cert(openssl)
-gen_host_cert_chain(openssl)
+gen_host_cert_chain()
 verify_host_against_root(openssl)
